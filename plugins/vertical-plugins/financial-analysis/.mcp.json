@@ -1,0 +1,8 @@
+{
+  "mcpServers": {
+    "tushare": {
+      "type": "http",
+      "url": "${TUSHARE_MCP_URL}"
+    }
+  }
+}

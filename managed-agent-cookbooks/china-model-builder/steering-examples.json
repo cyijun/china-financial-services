@@ -1,0 +1,5 @@
+[
+  { "event": "Build dcf for 000001.SZ, assumptions: {wacc: 0.085, tgr: 0.025, horizon: 5}", "description": "DCF with explicit assumptions" },
+  { "event": "Build trading comps for 600519.SH, peers: 000858.SZ,600809.SH,600702.SH", "description": "A-share trading comps from Tushare" },
+  { "event": "Build 3-stmt for 300750.SZ, source: latest annual report", "description": "Three-statement model from filings" }
+]

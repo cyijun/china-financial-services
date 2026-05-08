@@ -1,0 +1,47 @@
+# Operating System
+.DS_Store
+Thumbs.db
+
+# IDE and Editor
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Dependencies
+node_modules/
+vendor/
+venv/
+env/
+__pycache__/
+*.pyc
+
+# Build outputs
+dist/
+build/
+out/
+target/
+*.log
+
+# Environment and secrets
+.env
+.env.local
+.env.*.local
+*.key
+*.pem
+
+# Testing
+coverage/
+.coverage
+*.cover
+.pytest_cache/
+
+# Package files
+*.egg-info/
+.eggs/
+
+# Personal files
+TASKS.md
+MEMORY.md
+.claude/worktrees/

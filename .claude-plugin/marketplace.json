@@ -1,0 +1,28 @@
+{
+  "name": "claude-for-financial-services-tushare",
+  "owner": {
+    "name": "Tushare Edition"
+  },
+  "plugins": [
+    {
+      "name": "financial-analysis-tushare",
+      "source": "./plugins/vertical-plugins/financial-analysis",
+      "description": "Core financial modeling and analysis tools powered by Tushare: A-share market data, financial statements, valuation, and macro data"
+    },
+    {
+      "name": "equity-research-tushare",
+      "source": "./plugins/vertical-plugins/equity-research",
+      "description": "Equity research tools for China A-share market: earnings analysis, initiating coverage reports, and research workflows powered by Tushare"
+    },
+    {
+      "name": "china-market-researcher",
+      "source": "./plugins/agent-plugins/china-market-researcher",
+      "description": "Sector or theme to industry overview, competitive landscape, peer comps, and ideas shortlist for China A-share market"
+    },
+    {
+      "name": "china-model-builder",
+      "source": "./plugins/agent-plugins/china-model-builder",
+      "description": "DCF, comparable companies, 3-statement models for China A-share companies"
+    }
+  ]
+}

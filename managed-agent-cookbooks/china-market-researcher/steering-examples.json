@@ -1,0 +1,5 @@
+[
+  { "event": "Primer: 中国数据中心电力, angle: 供需缺口", "description": "主题性 primer，带研究角度" },
+  { "event": "Primer: 中国新能源汽车电池, angle: 行业整合", "description": "行业 primer，服务于 pitch" },
+  { "event": "Refresh comps only: 中国快递物流", "description": "现有 primer 的可比公司数据刷新" }
+]

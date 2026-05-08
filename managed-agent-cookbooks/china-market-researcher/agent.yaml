@@ -1,0 +1,23 @@
+# China Market Researcher — managed-agent cookbook
+
+name: china-market-researcher
+model: claude-opus-4-7
+
+system:
+  file: ../../plugins/agent-plugins/china-market-researcher/agents/china-market-researcher.md
+  append: "You are running headless. Produce files in ./out/; do not assume an open Office document."
+
+tools:
+  - type: agent_toolset_20260401
+    default_config: { enabled: false }
+    configs:
+      - { name: read,  enabled: true }
+      - { name: grep,  enabled: true }
+      - { name: glob,  enabled: true }
+  - { type: mcp_toolset, mcp_server_name: tushare, default_config: { enabled: true } }
+
+mcp_servers:
+  - { type: url, name: tushare, url: "${TUSHARE_MCP_URL}" }
+
+skills:
+  - { from_plugin: ../../plugins/agent-plugins/china-market-researcher }
