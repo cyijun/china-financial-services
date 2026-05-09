@@ -14,10 +14,6 @@ tools:
       - { name: read,  enabled: true }
       - { name: grep,  enabled: true }
       - { name: glob,  enabled: true }
-  - { type: mcp_toolset, mcp_server_name: tushare, default_config: { enabled: true } }
-
-mcp_servers:
-  - { type: url, name: tushare, url: "${TUSHARE_MCP_URL}" }
 
 skills:
   - { from_plugin: ../../plugins/agent-plugins/china-market-researcher }

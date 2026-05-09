@@ -24,7 +24,7 @@ plugins/
     china-market-researcher/      # Named end-to-end workflow agent
     china-model-builder/
   vertical-plugins/
-    financial-analysis/           # Skills, commands, MCP connector
+    financial-analysis/           # Skills, commands
     equity-research/
 managed-agent-cookbooks/
   china-market-researcher/        # Deploy manifest for POST /v1/agents
@@ -54,7 +54,6 @@ claude plugin install china-model-builder@china-financial-services
 
 ```bash
 export ANTHROPIC_API_KEY=sk-ant-...
-export TUSHARE_MCP_URL=https://your-tushare-mcp-server/...
 scripts/deploy-managed-agent.sh china-market-researcher
 ```
 

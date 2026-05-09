@@ -8,7 +8,6 @@
 
 ```bash
 export ANTHROPIC_API_KEY=sk-ant-...
-export TUSHARE_MCP_URL=...
 ./scripts/deploy-managed-agent.sh china-model-builder
 ```
 
