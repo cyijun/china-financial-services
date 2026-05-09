@@ -84,6 +84,10 @@ bash scripts/test-cookbooks.sh
 - **Web search** — industry reports, policy interpretation, news
 - **Company announcements** — audited figures and qualitative details
 
+## Credits
+
+This project is adapted from the [Anthropic Financial Services cookbook](https://github.com/anthropics/financial-services), which provides the underlying plugin architecture, managed-agent patterns, and Claude integration framework used here.
+
 ## License
 
 See [LICENSE](LICENSE).
