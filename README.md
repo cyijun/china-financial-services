@@ -13,8 +13,8 @@ Claude plugins and managed-agent templates for China A-share market research, po
 
 | Vertical Plugin | Description |
 |---|---|
-| **financial-analysis-tushare** | Core financial modeling tools: A-share comps, DCF, macro data, Tushare data skill |
-| **equity-research-tushare** | Initiating coverage reports, earnings analysis for China A-share |
+| **financial-analysis** | Core financial modeling tools: A-share comps, DCF, macro data, Tushare data skill |
+| **equity-research** | Initiating coverage reports, earnings analysis for China A-share |
 
 ## Repository Structure
 
@@ -46,8 +46,8 @@ Paste the repo URL in **Settings → Plugins → Add plugin**, or zip any direct
 
 ```bash
 claude plugin marketplace add <your-org>/claude-for-china-market
-claude plugin install china-market-researcher@claude-for-china-market
-claude plugin install china-model-builder@claude-for-china-market
+claude plugin install china-market-researcher@china-financial-services
+claude plugin install china-model-builder@china-financial-services
 ```
 
 ### Claude Managed Agents (API)
