@@ -15,7 +15,7 @@
     ],
     "PreToolUse": [
       {
-        "matcher": "WebSearch|WebFetch|mcp__plugin_tushare_.*|Bash|Agent",
+        "matcher": "WebSearch|WebFetch|Bash|Agent",
         "hooks": [
           {
             "type": "prompt",
@@ -27,7 +27,7 @@
     ],
     "PostToolUse": [
       {
-        "matcher": "WebSearch|WebFetch|mcp__plugin_tushare_.*|Bash|Agent",
+        "matcher": "WebSearch|WebFetch|Bash|Agent",
         "hooks": [
           {
             "type": "prompt",

@@ -11,20 +11,20 @@ Claude plugins and managed-agent templates for China A-share market research, po
 | **china-market-researcher** | Sector/theme → industry overview → competitive landscape → peer comps → ideas shortlist | Research note or slides |
 | **china-model-builder** | DCF, trading comps, 3-statement model for A-share companies | Excel workbook |
 
-| Vertical Plugin | Description |
-|---|---|
-| **financial-analysis** | Core financial modeling tools: A-share comps, DCF, macro data, Tushare data skill |
-| **equity-research** | Initiating coverage reports, earnings analysis for China A-share |
+| Vertical Plugin | Skills | Description |
+|---|---|---|
+| **financial-analysis** | `tushare-data`, `china-dcf-model`, `china-comps-analysis`, `china-macro-overview` | Core financial modeling and macro data tools |
+| **equity-research** | `china-initiating-coverage` | Initiating coverage reports for China A-share |
 
 ## Repository Structure
 
 ```
 plugins/
   agent-plugins/
-    china-market-researcher/      # Named end-to-end workflow agent
+    china-market-researcher/      # End-to-end workflow agent + bundled skills
     china-model-builder/
   vertical-plugins/
-    financial-analysis/           # Skills, commands
+    financial-analysis/           # Skills (source of truth)
     equity-research/
 managed-agent-cookbooks/
   china-market-researcher/        # Deploy manifest for POST /v1/agents
@@ -32,8 +32,11 @@ managed-agent-cookbooks/
 scripts/
   check.py                        # Lint and verify all manifests
   sync-agent-skills.py            # Sync bundled skills from vertical sources
+  sync-hooks.py                   # Sync year-guard hooks to all plugins
   deploy-managed-agent.sh         # Deploy a cookbook to CMA
   test-cookbooks.sh               # Dry-run all cookbooks
+  validate.py                     # Output-schema validation helper
+  orchestrate.py                  # Reference event-loop for cross-agent handoffs
 ```
 
 ## Installation
@@ -62,13 +65,16 @@ Requires `jq`, `zip`, `curl`, and `python3 + pyyaml`.
 ## Development
 
 ```bash
-# Lint everything
+# Lint everything (CI gate)
 python3 scripts/check.py
 
 # After editing a skill in vertical-plugins/, sync to agent bundles
 python3 scripts/sync-agent-skills.py
 
-# Dry-run all cookbooks
+# After editing hooks in financial-analysis/, sync to all plugins
+python3 scripts/sync-hooks.py
+
+# Dry-run all cookbooks (CI gate)
 bash scripts/test-cookbooks.sh
 ```
 

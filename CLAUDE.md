@@ -47,7 +47,7 @@ The vendored copies must stay byte-identical to the vertical source. `check.py` 
 
 Hooks live at `<plugin>/hooks/hooks.json` (plugin root, sibling to `skills/`). `financial-analysis/hooks/` is the **source of truth** for all year-guard hooks. Every other plugin receives a byte-identical copy so that year validation works regardless of which plugin a user installs.
 
-`scripts/sync-hooks.py` finds the single plugin that defines `hooks/` and copies it to every other plugin, skipping already-identical dirs. If more than one plugin defines `hooks/`, the script exits with an error (only one source of truth is allowed). **Edit hooks in `financial-analysis/`, then run `sync-hooks.py` — never edit a copied hooks directory directly.**
+`scripts/sync-hooks.py` has the source of truth hard-coded (`plugins/vertical-plugins/financial-analysis/hooks`). It copies it to every other plugin, overwriting any stale copy and skipping already-identical dirs. **Edit hooks in `financial-analysis/`, then run `sync-hooks.py` — never edit a copied hooks directory directly.**
 
 ## Architecture: the cookbook → CMA pipeline
 
