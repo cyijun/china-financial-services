@@ -5,12 +5,12 @@
   },
   "plugins": [
     {
-      "name": "financial-analysis-tushare",
+      "name": "financial-analysis",
       "source": "./plugins/vertical-plugins/financial-analysis",
       "description": "Core financial modeling and analysis tools powered by Tushare: A-share market data, financial statements, valuation, and macro data"
     },
     {
-      "name": "equity-research-tushare",
+      "name": "equity-research",
       "source": "./plugins/vertical-plugins/equity-research",
       "description": "Equity research tools for China A-share market: earnings analysis, initiating coverage reports, and research workflows powered by Tushare"
     },
