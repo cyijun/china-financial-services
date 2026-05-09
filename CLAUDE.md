@@ -17,6 +17,9 @@ python3 scripts/check.py
 # Re-vendor agent-plugin bundled skills from vertical-plugins/ (source of truth)
 python3 scripts/sync-agent-skills.py
 
+# Re-sync hooks/ from the source-of-truth plugin to every other plugin
+python3 scripts/sync-hooks.py
+
 # Dry-run all cookbooks — proves they resolve to a well-formed POST /v1/agents body
 bash scripts/test-cookbooks.sh
 
@@ -39,6 +42,12 @@ The marketplace at `.claude-plugin/marketplace.json` ships four plugins in two s
 The vendored copies must stay byte-identical to the vertical source. `check.py` runs `filecmp.dircmp` and fails on drift; `sync-agent-skills.py` is the only sanctioned way to update them. **Edit a skill in `vertical-plugins/`, then run sync — never edit a bundled copy directly.** Agent-plugin-only skills (no vertical source, e.g. `pptx-author`, `xlsx-author`) are allowed; `check.py` warns but does not fail.
 
 `agent.md` prose references skill names in backticks (e.g. `` `tushare-data` ``); `check.py` requires every such reference to exist in the agent's own `skills/` bundle.
+
+## Architecture: hooks — one source of truth, copied everywhere
+
+Hooks live at `<plugin>/hooks/hooks.json` (plugin root, sibling to `skills/`). `financial-analysis/hooks/` is the **source of truth** for all year-guard hooks. Every other plugin receives a byte-identical copy so that year validation works regardless of which plugin a user installs.
+
+`scripts/sync-hooks.py` finds the single plugin that defines `hooks/` and copies it to every other plugin, skipping already-identical dirs. If more than one plugin defines `hooks/`, the script exits with an error (only one source of truth is allowed). **Edit hooks in `financial-analysis/`, then run `sync-hooks.py` — never edit a copied hooks directory directly.**
 
 ## Architecture: the cookbook → CMA pipeline
 
