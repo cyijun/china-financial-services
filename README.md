@@ -48,7 +48,7 @@ Paste the repo URL in **Settings → Plugins → Add plugin**, or zip any direct
 ### Claude Code (CLI)
 
 ```bash
-claude plugin marketplace add <your-org>/claude-for-china-market
+claude plugin marketplace add cyijun/china-financial-services
 claude plugin install china-market-researcher@china-financial-services
 claude plugin install china-model-builder@china-financial-services
 ```
