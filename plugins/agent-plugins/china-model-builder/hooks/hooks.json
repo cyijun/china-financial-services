@@ -1,5 +1,5 @@
 {
-  "description": "三层年份校验：UserPromptSubmit 前置提醒 → PreToolUse 参数拦截 → PostToolUse 跨年数据警示",
+  "description": "年份校验三层：UserPromptSubmit 前置提醒 + WebSearch/WebFetch PreToolUse 参数检查 + PostToolUse 跨年输出快速检测（command hook，毫秒级）",
   "hooks": {
     "UserPromptSubmit": [
       {
@@ -7,7 +7,7 @@
         "hooks": [
           {
             "type": "prompt",
-            "prompt": "分析以下用户输入是否涉及日期、年份、财报数据、市场行情、数据查询、时间范围、历史数据、同比环比计算等内容。如果涉及，返回：\n{\n  \"continue\": true,\n  \"systemMessage\": \"【年份确认】当前是 2026 年。生成查询参数或进行日期计算时，请使用正确年份，避免将 2026 误写为 2025。\"\n}\n如果不涉及，返回空的 systemMessage。",
+            "prompt": "你是一个 JSON-only 输出节点，禁止散文回复。\n\n判断以下用户输入是否涉及日期、年份、财报数据、行情、时间范围、历史数据、同比环比等任一主题。\n\n用户输入: $USER_PROMPT\n\n若涉及，仅返回这一行 JSON：\n{\"continue\": true, \"systemMessage\": \"【年份确认】当前是 2026 年。生成查询参数或进行日期计算时请使用正确年份，避免将 2026 误写为 2025。\"}\n\n若不涉及，仅返回：\n{}",
             "timeout": 10
           }
         ]
@@ -15,11 +15,11 @@
     ],
     "PreToolUse": [
       {
-        "matcher": "WebSearch|WebFetch|Bash|Agent",
+        "matcher": "WebSearch|WebFetch",
         "hooks": [
           {
             "type": "prompt",
-            "prompt": "当前日期是 2026年5月10日。请检查以下工具调用的参数中是否存在'年份误用'——即上下文或用户明显要求的是2026年的当前数据，但参数中使用了2025年或其他非2026年份。\n\n以下情况不属于误用，不要拦截：\n- 明确查询历史数据（如'2025年年报'、'去年同期'）\n- 计算同比/环比需要对比2025年数据\n- 时间范围 intentionally 包含2025年\n\n工具名: $TOOL_NAME\n参数: $TOOL_INPUT\n\n如果确认存在误用，返回：\n{\n  \"hookSpecificOutput\": {\"permissionDecision\": \"allow\"},\n  \"systemMessage\": \"⚠️ 年份检查：'$TOOL_NAME' 的参数中可能使用了错误年份（如2025年）。请确认——如果本次应查询 2026 年数据，请修正为 2026 后重新调用。\"\n}\n如果不存在误用，返回：\n{\n  \"hookSpecificOutput\": {\"permissionDecision\": \"allow\"}\n}",
+            "prompt": "你是一个 JSON-only 输出节点，禁止散文回复。\n\n当前是 2026 年。检查以下工具调用参数中是否存在「年份误用」——即上下文显然要求 2026 年最新数据，但参数被写成 2025 或更早。\n\n以下情形不算误用，请放行：\n- 明确查询历史数据（如 \"2025 年年报\"、\"去年同期\"）\n- 计算同比/环比需要对比 2025 数据\n- 时间范围 intentionally 包含 2025\n\n工具参数: $TOOL_INPUT\n\n若存在年份误用，仅返回：\n{\"systemMessage\": \"⚠️ 年份检查：参数中疑似将 2026 误写为 2025，请确认后再调用。\"}\n\n否则仅返回：\n{}",
             "timeout": 15
           }
         ]
@@ -30,9 +30,9 @@
         "matcher": "WebSearch|WebFetch|Bash|Agent",
         "hooks": [
           {
-            "type": "prompt",
-            "prompt": "当前日期是 2026年5月10日。请快速扫描以下工具输出结果，检查是否同时包含 2025 年和 2026 年的数据，或时间范围跨越 2025-2026 年（如'2025年5月到2026年5月'）。\n\n只需要检查年份数字（2025、2026）的出现情况，不需要深入理解数据的业务含义。\n\n工具名: $TOOL_NAME\n输出结果: $TOOL_RESULT\n\n如果同时检测到 2025 和 2026 两个年份，返回：\n{\n  \"continue\": true,\n  \"systemMessage\": \"【跨年数据注意】该结果包含跨年数据（2025年与2026年数据混合）。在引用、汇总、计算同比/环比或进行对比分析时，请严格区分年份，避免将2025年数据误当作2026年数据使用。\"\n}\n如果没有跨年数据，返回空的 systemMessage。",
-            "timeout": 15
+            "type": "command",
+            "command": "bash \"${CLAUDE_PLUGIN_ROOT}/hooks/check-cross-year.sh\"",
+            "timeout": 5
           }
         ]
       }
