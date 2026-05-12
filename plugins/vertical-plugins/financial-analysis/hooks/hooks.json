@@ -1,14 +1,14 @@
 {
-  "description": "年份校验三层：UserPromptSubmit 前置提醒 + WebSearch/WebFetch PreToolUse 参数检查 + PostToolUse 跨年输出快速检测（command hook，毫秒级）",
+  "description": "年份校验三层:UserPromptSubmit 关键词提醒 + WebSearch/WebFetch PreToolUse 参数检查 + PostToolUse 跨年输出检测(均为 command hook,毫秒级,符合规范)",
   "hooks": {
     "UserPromptSubmit": [
       {
         "matcher": "*",
         "hooks": [
           {
-            "type": "prompt",
-            "prompt": "你是一个 JSON-only 输出节点，禁止散文回复。\n\n判断以下用户输入是否涉及日期、年份、财报数据、行情、时间范围、历史数据、同比环比等任一主题。\n\n用户输入: $USER_PROMPT\n\n若涉及，仅返回这一行 JSON：\n{\"continue\": true, \"systemMessage\": \"【年份确认】当前是 2026 年。生成查询参数或进行日期计算时请使用正确年份，避免将 2026 误写为 2025。\"}\n\n若不涉及，仅返回：\n{}",
-            "timeout": 10
+            "type": "command",
+            "command": "bash \"${CLAUDE_PLUGIN_ROOT}/hooks/check-prompt-year.sh\"",
+            "timeout": 5
           }
         ]
       }
@@ -18,9 +18,9 @@
         "matcher": "WebSearch|WebFetch",
         "hooks": [
           {
-            "type": "prompt",
-            "prompt": "你是一个 JSON-only 输出节点，禁止散文回复。\n\n当前是 2026 年。检查以下工具调用参数中是否存在「年份误用」——即上下文显然要求 2026 年最新数据，但参数被写成 2025 或更早。\n\n以下情形不算误用，请放行：\n- 明确查询历史数据（如 \"2025 年年报\"、\"去年同期\"）\n- 计算同比/环比需要对比 2025 数据\n- 时间范围 intentionally 包含 2025\n\n工具参数: $TOOL_INPUT\n\n若存在年份误用，仅返回：\n{\"systemMessage\": \"⚠️ 年份检查：参数中疑似将 2026 误写为 2025，请确认后再调用。\"}\n\n否则仅返回：\n{}",
-            "timeout": 15
+            "type": "command",
+            "command": "bash \"${CLAUDE_PLUGIN_ROOT}/hooks/check-tool-year.sh\"",
+            "timeout": 5
           }
         ]
       }
