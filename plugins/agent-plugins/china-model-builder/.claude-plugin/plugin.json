@@ -1,6 +1,6 @@
 {
   "name": "china-model-builder",
-  "version": "0.1.0",
+  "version": "1.0.1",
   "description": "中国A股财务建模师：DCF、可比分析、三表预测，基于Tushare数据生成Excel模型",
   "author": {
     "name": "cyijun"
