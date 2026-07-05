@@ -1,7 +1,7 @@
 {
   "name": "china-market-researcher",
-  "version": "1.0.1",
-  "description": "A-share market research agent — sector primers, competitive landscape, peer comps, and thematic idea generation powered by Tushare and web research.",
+  "version": "2.0.0",
+  "description": "A-share market research agent \u2014 sector primers, competitive landscape, peer comps, and thematic idea generation powered by Tushare and web research.",
   "author": {
     "name": "cyijun"
   }

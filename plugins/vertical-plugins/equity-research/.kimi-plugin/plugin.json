@@ -1,7 +1,7 @@
 {
   "name": "equity-research",
-  "version": "1.0.1",
-  "description": "中国A股投研工具：盈利分析、首次覆盖报告及投研工作流，基于Tushare数据",
+  "version": "2.0.0",
+  "description": "\u4e2d\u56fdA\u80a1\u6295\u7814\u5de5\u5177\uff1a\u76c8\u5229\u5206\u6790\u3001\u9996\u6b21\u8986\u76d6\u62a5\u544a\u53ca\u6295\u7814\u5de5\u4f5c\u6d41\uff0c\u57fa\u4e8eTushare\u6570\u636e",
   "author": {
     "name": "cyijun"
   },

@@ -1,6 +1,6 @@
 {
   "name": "financial-analysis",
-  "version": "1.0.1",
+  "version": "2.0.0",
   "description": "Core financial modeling and analysis tools powered by Tushare: A-share market data, financial statements, valuation, and macro data",
   "author": {
     "name": "Tushare Edition"

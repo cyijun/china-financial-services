@@ -1,0 +1,36 @@
+{
+  "name": "china-financial-services",
+  "version": "2.0.0",
+  "description": "AI agent plugins and managed-agent templates for China A-share market research, powered by Tushare.",
+  "author": {
+    "name": "cyijun"
+  },
+  "homepage": "https://github.com/cyijun/china-financial-services",
+  "license": "MIT",
+  "keywords": [
+    "china",
+    "a-share",
+    "financial-services",
+    "tushare",
+    "market-research",
+    "financial-modeling"
+  ],
+  "skills": "./skills/",
+  "sessionStart": {
+    "skill": "china-financial-services"
+  },
+  "interface": {
+    "displayName": "China Financial Services",
+    "shortDescription": "China A-share market research and financial modeling agents",
+    "longDescription": "A bundle of AI agent plugins for China A-share market research and financial modeling, including sector research, DCF/comps modeling, and equity coverage workflows.",
+    "developerName": "cyijun",
+    "capabilities": [
+      "Read",
+      "Write",
+      "Bash",
+      "WebSearch",
+      "Agent"
+    ],
+    "websiteURL": "https://github.com/cyijun/china-financial-services"
+  }
+}

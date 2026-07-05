@@ -48,7 +48,6 @@ for yml in sorted(MANAGED.rglob("*.yaml")):
 
 # --- 2. JSON parse ----------------------------------------------------------
 json_globs = [
-    "marketplace.json",
     ".claude-plugin/marketplace.json",
     "plugins/**/.claude-plugin/plugin.json",
     "managed-agent-cookbooks/*/steering-examples.json",
@@ -120,7 +119,9 @@ import re  # noqa: E402
 NAME_RE = re.compile(r"^[a-z0-9][a-z0-9_-]{0,63}$")
 VALID_CAPS = {"Read", "Write", "Edit", "Bash", "WebSearch", "WebFetch", "Agent", "AskUser", "Think"}
 
-for km in sorted(ROOT.glob("plugins/**/.kimi-plugin/plugin.json")):
+kimi_manifests = sorted(ROOT.glob("plugins/**/.kimi-plugin/plugin.json"))
+kimi_manifests += sorted(ROOT.glob(".kimi-plugin/plugin.json"))
+for km in kimi_manifests:
     checked += 1
     try:
         data = json.loads(km.read_text())
@@ -128,7 +129,7 @@ for km in sorted(ROOT.glob("plugins/**/.kimi-plugin/plugin.json")):
         err(f"JSON parse: {rel(km)}: {e}")
         continue
 
-    plugin_root = km.parent.parent
+    plugin_root = (km.parent.parent if km.parent != ROOT / ".kimi-plugin" else ROOT).resolve()
     name = data.get("name")
     if not name:
         err(f"kimi-manifest: {rel(km)}: missing 'name'")
@@ -196,38 +197,6 @@ for p in json.loads(mp.read_text()).get("plugins", []):
     src = (ROOT / p["source"]).resolve()
     if not (src / ".claude-plugin" / "plugin.json").is_file():
         err(f"marketplace: {p['name']} source -> {p['source']} (no plugin.json)")
-
-# --- 4e. kimi marketplace source paths resolve -----------------------------
-KIMI_MP = ROOT / "marketplace.json"
-KIMI_RELEASE_BASE = "https://github.com/cyijun/china-financial-services/releases/latest/download/"
-if KIMI_MP.is_file():
-    checked += 1
-    try:
-        kimi_data = json.loads(KIMI_MP.read_text())
-    except json.JSONDecodeError as e:
-        err(f"JSON parse: {rel(KIMI_MP)}: {e}")
-    else:
-        for p in kimi_data.get("plugins") or []:
-            source = p.get("source", "")
-            if not source.startswith(KIMI_RELEASE_BASE) or not source.endswith(".zip"):
-                err(
-                    f"kimi-marketplace: {p.get('id')}: source must be a "
-                    f"{KIMI_RELEASE_BASE}<plugin>.zip URL"
-                )
-                continue
-            plugin_id = p.get("id", "")
-            expected_zip = f"{plugin_id}.zip"
-            if not source.endswith(expected_zip):
-                err(f"kimi-marketplace: {plugin_id}: source filename must match {expected_zip}")
-                continue
-            local_plugin = None
-            for plugin_dir in PLUGINS.glob("*/*"):
-                if plugin_dir.is_dir() and plugin_dir.name == plugin_id:
-                    if (plugin_dir / ".kimi-plugin" / "plugin.json").is_file():
-                        local_plugin = plugin_dir
-                        break
-            if local_plugin is None:
-                err(f"kimi-marketplace: {plugin_id}: no local plugin directory with .kimi-plugin/plugin.json found")
 
 # --- 5. required files per managed-agent -----------------------------------
 for d in sorted(MANAGED.iterdir()):
