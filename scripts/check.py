@@ -199,6 +199,7 @@ for p in json.loads(mp.read_text()).get("plugins", []):
 
 # --- 4e. kimi marketplace source paths resolve -----------------------------
 KIMI_MP = ROOT / "marketplace.json"
+KIMI_RELEASE_BASE = "https://github.com/cyijun/china-financial-services/releases/latest/download/"
 if KIMI_MP.is_file():
     checked += 1
     try:
@@ -208,13 +209,25 @@ if KIMI_MP.is_file():
     else:
         for p in kimi_data.get("plugins") or []:
             source = p.get("source", "")
-            if not source.startswith("https://github.com/cyijun/china-financial-services/tree/main/"):
-                err(f"kimi-marketplace: {p.get('id')}: source must be a github.com/cyijun/china-financial-services/tree/main/ URL")
+            if not source.startswith(KIMI_RELEASE_BASE) or not source.endswith(".zip"):
+                err(
+                    f"kimi-marketplace: {p.get('id')}: source must be a "
+                    f"{KIMI_RELEASE_BASE}<plugin>.zip URL"
+                )
                 continue
-            rel_path = source.split("/tree/main/", 1)[1]
-            local_src = (ROOT / rel_path).resolve()
-            if not (local_src / ".kimi-plugin" / "plugin.json").is_file():
-                err(f"kimi-marketplace: {p.get('id')}: source -> {source} (no .kimi-plugin/plugin.json)")
+            plugin_id = p.get("id", "")
+            expected_zip = f"{plugin_id}.zip"
+            if not source.endswith(expected_zip):
+                err(f"kimi-marketplace: {plugin_id}: source filename must match {expected_zip}")
+                continue
+            local_plugin = None
+            for plugin_dir in PLUGINS.glob("*/*"):
+                if plugin_dir.is_dir() and plugin_dir.name == plugin_id:
+                    if (plugin_dir / ".kimi-plugin" / "plugin.json").is_file():
+                        local_plugin = plugin_dir
+                        break
+            if local_plugin is None:
+                err(f"kimi-marketplace: {plugin_id}: no local plugin directory with .kimi-plugin/plugin.json found")
 
 # --- 5. required files per managed-agent -----------------------------------
 for d in sorted(MANAGED.iterdir()):

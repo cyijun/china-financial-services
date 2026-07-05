@@ -65,7 +65,7 @@ scripts/
 
 #### 方式 A：将本仓库添加为插件市场
 
-在 Kimi Code 插件设置中添加本仓库 URL，然后安装所需插件：
+在 Kimi Code 插件市场设置中添加 `https://github.com/cyijun/china-financial-services`。插件市场会自动下载最新的 Release zip 包。然后安装所需插件：
 
 ```bash
 /plugins install financial-analysis
@@ -86,6 +86,10 @@ scripts/
 然后运行 `/plugins info <plugin-name>` 验证，并运行 `/reload` 激活。
 
 智能体插件（`china-market-researcher`、`china-model-builder`）加载后会通过 `sessionStart.skill` 自动启动工作流。
+
+#### 发布 Kimi 插件
+
+创建 GitHub Release 时，`.github/workflows/release-kimi-plugins.yml` 会自动将每个插件打包成 zip 并上传到 Release 附件。根目录的 `marketplace.json` 始终指向最新的 Release 资源。
 
 ### Claude Code（CLI）
 

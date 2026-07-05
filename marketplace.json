@@ -15,7 +15,7 @@
         "valuation",
         "macro"
       ],
-      "source": "https://github.com/cyijun/china-financial-services/tree/main/plugins/vertical-plugins/financial-analysis"
+      "source": "https://github.com/cyijun/china-financial-services/releases/latest/download/financial-analysis.zip"
     },
     {
       "id": "equity-research",
@@ -30,7 +30,7 @@
         "tushare",
         "coverage"
       ],
-      "source": "https://github.com/cyijun/china-financial-services/tree/main/plugins/vertical-plugins/equity-research"
+      "source": "https://github.com/cyijun/china-financial-services/releases/latest/download/equity-research.zip"
     },
     {
       "id": "china-market-researcher",
@@ -45,7 +45,7 @@
         "tushare",
         "agent"
       ],
-      "source": "https://github.com/cyijun/china-financial-services/tree/main/plugins/agent-plugins/china-market-researcher"
+      "source": "https://github.com/cyijun/china-financial-services/releases/latest/download/china-market-researcher.zip"
     },
     {
       "id": "china-model-builder",
@@ -61,7 +61,7 @@
         "dcf",
         "agent"
       ],
-      "source": "https://github.com/cyijun/china-financial-services/tree/main/plugins/agent-plugins/china-model-builder"
+      "source": "https://github.com/cyijun/china-financial-services/releases/latest/download/china-model-builder.zip"
     }
   ]
 }
