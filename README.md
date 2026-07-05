@@ -1,5 +1,7 @@
 # China Financial Services
 
+English | [中文](README.zh.md)
+
 AI agent plugins and managed-agent templates for China A-share market research, powered by [Tushare](https://tushare.pro/).
 
 > **Important:** Nothing in this repository constitutes investment, legal, tax, or accounting advice. These agents draft analyst work product for review by a qualified professional. They do not make investment recommendations, execute transactions, or bind risk. Every output is staged for human sign-off.
