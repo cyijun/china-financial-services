@@ -1,0 +1,22 @@
+{
+  "name": "equity-research",
+  "version": "1.0.1",
+  "description": "中国A股投研工具：盈利分析、首次覆盖报告及投研工作流，基于Tushare数据",
+  "author": {
+    "name": "cyijun"
+  },
+  "skills": "./skills/",
+  "interface": {
+    "displayName": "Equity Research",
+    "shortDescription": "China A-share equity research tools",
+    "longDescription": "Equity research tools for China A-share market: earnings analysis, initiating coverage reports, and research workflows powered by Tushare.",
+    "developerName": "cyijun",
+    "capabilities": [
+      "Read",
+      "Write",
+      "Bash",
+      "WebSearch"
+    ],
+    "websiteURL": "https://github.com/cyijun/china-financial-services"
+  }
+}
