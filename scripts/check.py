@@ -50,6 +50,7 @@ for yml in sorted(MANAGED.rglob("*.yaml")):
 json_globs = [
     ".claude-plugin/marketplace.json",
     "plugins/**/.claude-plugin/plugin.json",
+    "plugins/**/.kimi-plugin/plugin.json",
     "managed-agent-cookbooks/*/steering-examples.json",
 ]
 for pat in json_globs:
@@ -114,6 +115,47 @@ for yml in sorted(MANAGED.rglob("*.yaml")):
 # --- 4b. agent-plugin bundled skills match vertical source -----------------
 import filecmp  # noqa: E402
 import re  # noqa: E402
+
+# --- 3b. kimi.plugin.json validation ----------------------------------------
+NAME_RE = re.compile(r"^[a-z0-9][a-z0-9_-]{0,63}$")
+VALID_CAPS = {"Read", "Write", "Edit", "Bash", "WebSearch", "WebFetch", "Agent", "AskUser", "Think"}
+
+for km in sorted(ROOT.glob("plugins/**/.kimi-plugin/plugin.json")):
+    checked += 1
+    try:
+        data = json.loads(km.read_text())
+    except json.JSONDecodeError as e:
+        err(f"JSON parse: {rel(km)}: {e}")
+        continue
+
+    plugin_root = km.parent.parent
+    name = data.get("name")
+    if not name:
+        err(f"kimi-manifest: {rel(km)}: missing 'name'")
+    elif not NAME_RE.match(name):
+        err(f"kimi-manifest: {rel(km)}: name '{name}' does not match allowed pattern")
+
+    skills = data.get("skills")
+    if not skills:
+        err(f"kimi-manifest: {rel(km)}: missing 'skills'")
+    elif not isinstance(skills, str) or not skills.startswith("./"):
+        err(f"kimi-manifest: {rel(km)}: skills path must start with './'")
+    else:
+        p = (plugin_root / skills).resolve()
+        if not p.is_dir():
+            err(f"kimi-manifest: {rel(km)}: skills -> {skills} (not found)")
+
+    session_skill = (data.get("sessionStart") or {}).get("skill")
+    if session_skill:
+        p = (plugin_root / skills / session_skill / "SKILL.md").resolve() if skills else None
+        if not p or not p.is_file():
+            err(f"kimi-manifest: {rel(km)}: sessionStart.skill '{session_skill}' not found")
+
+    caps = (data.get("interface") or {}).get("capabilities")
+    if caps:
+        bad = [c for c in caps if c not in VALID_CAPS]
+        if bad:
+            err(f"kimi-manifest: {rel(km)}: unknown capabilities {bad}")
 
 src_by_name = {p.name: p for p in PLUGINS.glob("vertical-plugins/*/skills/*") if p.is_dir()}
 for bundled in sorted(PLUGINS.glob("agent-plugins/*/skills/*")):
