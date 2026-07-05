@@ -82,7 +82,7 @@ Install each plugin directly from its directory:
 /plugins install ./plugins/agent-plugins/china-model-builder
 ```
 
-Then run `/plugins info <id>` to verify, and `/reload` to activate.
+Then run `/plugins info <plugin-name>` to verify, and `/reload` to activate.
 
 Agent plugins (`china-market-researcher`, `china-model-builder`) will start their workflow automatically via `sessionStart.skill` once loaded.
 

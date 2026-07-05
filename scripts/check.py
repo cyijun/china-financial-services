@@ -115,7 +115,7 @@ for yml in sorted(MANAGED.rglob("*.yaml")):
 import filecmp  # noqa: E402
 import re  # noqa: E402
 
-# --- 3b. kimi.plugin.json validation ----------------------------------------
+# --- 4c. kimi.plugin.json validation ----------------------------------------
 NAME_RE = re.compile(r"^[a-z0-9][a-z0-9_-]{0,63}$")
 VALID_CAPS = {"Read", "Write", "Edit", "Bash", "WebSearch", "WebFetch", "Agent", "AskUser", "Think"}
 
@@ -189,7 +189,7 @@ for md in sorted(PLUGINS.glob("agent-plugins/*/agents/*.md")):
                 f"plugins/agent-plugins/{slug}/skills/{ref}/ is not bundled"
             )
 
-# --- 4c. marketplace source paths resolve ----------------------------------
+# --- 4d. marketplace source paths resolve ----------------------------------
 mp = ROOT / ".claude-plugin" / "marketplace.json"
 for p in json.loads(mp.read_text()).get("plugins", []):
     src = (ROOT / p["source"]).resolve()
