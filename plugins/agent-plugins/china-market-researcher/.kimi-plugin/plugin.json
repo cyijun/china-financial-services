@@ -1,0 +1,26 @@
+{
+  "name": "china-market-researcher",
+  "version": "1.0.1",
+  "description": "A-share market research agent — sector primers, competitive landscape, peer comps, and thematic idea generation powered by Tushare and web research.",
+  "author": {
+    "name": "cyijun"
+  },
+  "skills": "./skills/",
+  "sessionStart": {
+    "skill": "china-market-researcher"
+  },
+  "interface": {
+    "displayName": "China Market Researcher",
+    "shortDescription": "A-share market research agent",
+    "longDescription": "Sector or theme to industry overview, competitive landscape, peer comps, and ideas shortlist for China A-share market. Activates automatically on plugin start.",
+    "developerName": "cyijun",
+    "capabilities": [
+      "Read",
+      "Write",
+      "Bash",
+      "WebSearch",
+      "Agent"
+    ],
+    "websiteURL": "https://github.com/cyijun/china-financial-services"
+  }
+}
