@@ -71,6 +71,21 @@ claude plugin install china-market-researcher@china-financial-services
 claude plugin install china-model-builder@china-financial-services
 ```
 
+### Kimi Code (CLI)
+
+Install each plugin directly from its directory:
+
+```bash
+/plugins install ./plugins/vertical-plugins/financial-analysis
+/plugins install ./plugins/vertical-plugins/equity-research
+/plugins install ./plugins/agent-plugins/china-market-researcher
+/plugins install ./plugins/agent-plugins/china-model-builder
+```
+
+Then run `/plugins info <id>` to verify, and `/reload` to activate.
+
+Agent plugins (`china-market-researcher`, `china-model-builder`) will start their workflow automatically via `sessionStart.skill` once loaded.
+
 ### Claude Managed Agents (API)
 
 ```bash
