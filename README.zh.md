@@ -63,7 +63,18 @@ scripts/
 
 ### Kimi Code（CLI）
 
-直接从对应目录安装每个插件：
+#### 方式 A：将本仓库添加为插件市场
+
+在 Kimi Code 插件设置中添加本仓库 URL，然后安装所需插件：
+
+```bash
+/plugins install financial-analysis
+/plugins install equity-research
+/plugins install china-market-researcher
+/plugins install china-model-builder
+```
+
+#### 方式 B：从本地目录安装
 
 ```bash
 /plugins install ./plugins/vertical-plugins/financial-analysis

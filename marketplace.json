@@ -1,0 +1,67 @@
+{
+  "version": "1",
+  "plugins": [
+    {
+      "id": "financial-analysis",
+      "tier": "community",
+      "displayName": "Financial Analysis",
+      "version": "1.0.1",
+      "description": "Core financial modeling and analysis tools powered by Tushare: A-share market data, financial statements, valuation, and macro data.",
+      "keywords": [
+        "china",
+        "a-share",
+        "financial-analysis",
+        "tushare",
+        "valuation",
+        "macro"
+      ],
+      "source": "https://github.com/cyijun/china-financial-services/tree/main/plugins/vertical-plugins/financial-analysis"
+    },
+    {
+      "id": "equity-research",
+      "tier": "community",
+      "displayName": "Equity Research",
+      "version": "1.0.1",
+      "description": "Equity research tools for China A-share market: earnings analysis, initiating coverage reports, and research workflows powered by Tushare.",
+      "keywords": [
+        "china",
+        "a-share",
+        "equity-research",
+        "tushare",
+        "coverage"
+      ],
+      "source": "https://github.com/cyijun/china-financial-services/tree/main/plugins/vertical-plugins/equity-research"
+    },
+    {
+      "id": "china-market-researcher",
+      "tier": "community",
+      "displayName": "China Market Researcher",
+      "version": "1.0.1",
+      "description": "A-share market research agent — sector primers, competitive landscape, peer comps, and thematic idea generation powered by Tushare and web research.",
+      "keywords": [
+        "china",
+        "a-share",
+        "market-research",
+        "tushare",
+        "agent"
+      ],
+      "source": "https://github.com/cyijun/china-financial-services/tree/main/plugins/agent-plugins/china-market-researcher"
+    },
+    {
+      "id": "china-model-builder",
+      "tier": "community",
+      "displayName": "China Model Builder",
+      "version": "1.0.1",
+      "description": "DCF, comparable companies, and 3-statement models for China A-share companies, generating Excel workbooks powered by Tushare.",
+      "keywords": [
+        "china",
+        "a-share",
+        "financial-modeling",
+        "tushare",
+        "dcf",
+        "agent"
+      ],
+      "source": "https://github.com/cyijun/china-financial-services/tree/main/plugins/agent-plugins/china-model-builder"
+    }
+  ]
+}

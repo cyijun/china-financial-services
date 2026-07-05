@@ -48,6 +48,7 @@ for yml in sorted(MANAGED.rglob("*.yaml")):
 
 # --- 2. JSON parse ----------------------------------------------------------
 json_globs = [
+    "marketplace.json",
     ".claude-plugin/marketplace.json",
     "plugins/**/.claude-plugin/plugin.json",
     "managed-agent-cookbooks/*/steering-examples.json",
@@ -195,6 +196,25 @@ for p in json.loads(mp.read_text()).get("plugins", []):
     src = (ROOT / p["source"]).resolve()
     if not (src / ".claude-plugin" / "plugin.json").is_file():
         err(f"marketplace: {p['name']} source -> {p['source']} (no plugin.json)")
+
+# --- 4e. kimi marketplace source paths resolve -----------------------------
+KIMI_MP = ROOT / "marketplace.json"
+if KIMI_MP.is_file():
+    checked += 1
+    try:
+        kimi_data = json.loads(KIMI_MP.read_text())
+    except json.JSONDecodeError as e:
+        err(f"JSON parse: {rel(KIMI_MP)}: {e}")
+    else:
+        for p in kimi_data.get("plugins") or []:
+            source = p.get("source", "")
+            if not source.startswith("https://github.com/cyijun/china-financial-services/tree/main/"):
+                err(f"kimi-marketplace: {p.get('id')}: source must be a github.com/cyijun/china-financial-services/tree/main/ URL")
+                continue
+            rel_path = source.split("/tree/main/", 1)[1]
+            local_src = (ROOT / rel_path).resolve()
+            if not (local_src / ".kimi-plugin" / "plugin.json").is_file():
+                err(f"kimi-marketplace: {p.get('id')}: source -> {source} (no .kimi-plugin/plugin.json)")
 
 # --- 5. required files per managed-agent -----------------------------------
 for d in sorted(MANAGED.iterdir()):
