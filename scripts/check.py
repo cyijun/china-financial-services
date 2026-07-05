@@ -50,7 +50,6 @@ for yml in sorted(MANAGED.rglob("*.yaml")):
 json_globs = [
     ".claude-plugin/marketplace.json",
     "plugins/**/.claude-plugin/plugin.json",
-    "plugins/**/.kimi-plugin/plugin.json",
     "managed-agent-cookbooks/*/steering-examples.json",
 ]
 for pat in json_globs:
@@ -142,14 +141,19 @@ for km in sorted(ROOT.glob("plugins/**/.kimi-plugin/plugin.json")):
         err(f"kimi-manifest: {rel(km)}: skills path must start with './'")
     else:
         p = (plugin_root / skills).resolve()
-        if not p.is_dir():
+        if plugin_root not in p.parents and p != plugin_root:
+            err(f"kimi-manifest: {rel(km)}: skills -> {skills} (outside plugin root)")
+        elif not p.is_dir():
             err(f"kimi-manifest: {rel(km)}: skills -> {skills} (not found)")
 
     session_skill = (data.get("sessionStart") or {}).get("skill")
     if session_skill:
-        p = (plugin_root / skills / session_skill / "SKILL.md").resolve() if skills else None
-        if not p or not p.is_file():
-            err(f"kimi-manifest: {rel(km)}: sessionStart.skill '{session_skill}' not found")
+        if isinstance(skills, str):
+            p = (plugin_root / skills / session_skill / "SKILL.md").resolve()
+            if plugin_root not in p.parents and p != plugin_root:
+                err(f"kimi-manifest: {rel(km)}: sessionStart.skill '{session_skill}' (outside plugin root)")
+            elif not p.is_file():
+                err(f"kimi-manifest: {rel(km)}: sessionStart.skill '{session_skill}' not found")
 
     caps = (data.get("interface") or {}).get("capabilities")
     if caps:
