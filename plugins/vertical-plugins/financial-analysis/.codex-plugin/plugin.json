@@ -1,0 +1,27 @@
+{
+  "name": "financial-analysis",
+  "version": "2.1.0",
+  "description": "China A-share financial statements, modeling, valuation, and macro analysis with Tushare data.",
+  "author": {
+    "name": "Tushare Edition",
+    "url": "https://github.com/cyijun"
+  },
+  "homepage": "https://github.com/cyijun/china-financial-services",
+  "repository": "https://github.com/cyijun/china-financial-services",
+  "license": "Apache-2.0",
+  "keywords": ["a-share", "financial-analysis", "valuation", "tushare"],
+  "skills": "./skills/",
+  "interface": {
+    "displayName": "China Financial Analysis",
+    "shortDescription": "A-share financial analysis, modeling, and valuation.",
+    "longDescription": "Analyze A-share financial statements, build auditable models, compare peers, and triangulate valuation using China-market data contracts.",
+    "developerName": "cyijun",
+    "category": "Finance",
+    "capabilities": ["Interactive", "Read", "Write"],
+    "websiteURL": "https://github.com/cyijun/china-financial-services",
+    "defaultPrompt": [
+      "Analyze this A-share company's financial statements",
+      "Build an auditable DCF and comparable-company valuation"
+    ]
+  }
+}

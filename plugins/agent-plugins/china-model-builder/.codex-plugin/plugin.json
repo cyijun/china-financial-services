@@ -1,0 +1,27 @@
+{
+  "name": "china-model-builder",
+  "version": "2.1.0",
+  "description": "Bundled A-share financial-modeling workflows for three statements, DCF, comps, and workbook audit.",
+  "author": {
+    "name": "cyijun",
+    "url": "https://github.com/cyijun"
+  },
+  "homepage": "https://github.com/cyijun/china-financial-services",
+  "repository": "https://github.com/cyijun/china-financial-services",
+  "license": "Apache-2.0",
+  "keywords": ["a-share", "financial-modeling", "dcf", "valuation"],
+  "skills": "./skills/",
+  "interface": {
+    "displayName": "China Model Builder",
+    "shortDescription": "Bundled A-share modeling, valuation, and audit workflows.",
+    "longDescription": "Build and audit A-share three-statement, DCF, and comparable-company models with explicit point-in-time evidence and model-quality gates.",
+    "developerName": "cyijun",
+    "category": "Finance",
+    "capabilities": ["Interactive", "Read", "Write"],
+    "websiteURL": "https://github.com/cyijun/china-financial-services",
+    "defaultPrompt": [
+      "Build an A-share three-statement and DCF model",
+      "Audit this valuation workbook and flag broken assumptions"
+    ]
+  }
+}

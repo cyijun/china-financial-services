@@ -9,9 +9,10 @@
 | 检查 | 结果 | 能证明 | 不能证明 |
 |---|---|---|---|
 | `python3 -m unittest discover -v tests` | 30/30通过 | 时刻级PIT、财务保守生效、历史成员/生命周期、数据集特定代码、schema/单位、降级闸门、截断、Mock隔离、论点哈希链与实盘验收器脱敏 | 未于当次单元测中发起真实网络请求、实盘策略有效性 |
-| `python3 scripts/check.py` | 60个文件、0错误 | 清单、依赖、Agent工具、Skill闭包、本地链接、Kimi字段、递归vendored一致性、Agent/Kimi正文一致、hooks和已知方法论回归均有效 | 外部平台实际安装与加载成功 |
+| `python3 scripts/check.py` | 65个文件、0错误 | Claude/Kimi/Codex清单、依赖、Agent工具、Skill闭包、本地链接、递归vendored一致性、Agent/Kimi正文一致、hooks和已知方法论回归均有效 | 外部平台实际安装与加载成功 |
 | `bash scripts/test-cookbooks.sh` | 2/2通过 | 两个Managed Agent可解析为非空请求体；所需工具已启用 | 真实API部署成功 |
 | Skill Creator `quick_validate.py` | 44个Skill目录、0失败 | Skill名称、frontmatter和基础结构 | 方法在真实公司的分析质量 |
+| Plugin Creator `validate_plugin.py` | 5个Codex子插件、0失败 | 原生`.codex-plugin/plugin.json`、字段、路径和内部Skill结构满足当前Codex插件校验契约 | 用户账户已安装插件、Claude专用hooks/Managed Agents可由Codex原生执行 |
 | AKShare真实只读冒烟 | `stock_info_a_code_name`成功，5549行，`status=full` | 2026-08-24当次上游代码表schema兼容；`920xxx`映射到`.BJ` | 其他AKShare接口稳定性、长期可用性 |
 | Tushare全接口真实只读验收 | 19项检查中18项通过，所有必需项通过；仅独立授权的`yc_cb`不可用 | 交易日历、单票日线、四类单票财务、四类VIP横截面、历史申万成员、历史ST、同花顺指数/成员及4项仓库路由集成调用在2026-08-24当次可用 | 未授权的`yc_cb`；未来权限、限流和上游schema不会变化 |
 

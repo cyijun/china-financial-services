@@ -127,6 +127,8 @@ for plugin in marketplace.get("plugins") or []:
     source = (ROOT / plugin.get("source", "")).resolve()
     if not (source / ".claude-plugin" / "plugin.json").is_file():
         err(f"marketplace: {plugin.get('name')} source has no Claude manifest")
+    if not (source / ".codex-plugin" / "plugin.json").is_file():
+        err(f"marketplace: {plugin.get('name')} source has no Codex manifest")
 
 claude_manifests: Dict[Path, Dict[str, Any]] = {}
 for path in sorted(ROOT.glob("plugins/**/.claude-plugin/plugin.json")):
@@ -157,6 +159,40 @@ for path in sorted([*ROOT.glob("plugins/**/.kimi-plugin/plugin.json"), ROOT / ".
     claude_manifest = claude_manifests.get(plugin_root.resolve())
     if claude_manifest and (manifest.get("name"), manifest.get("version")) != (claude_manifest.get("name"), claude_manifest.get("version")):
         err(f"manifest-parity: {rel(path)} name/version differs from Claude manifest")
+
+CODEX_INTERFACE_REQUIRED = {
+    "displayName",
+    "shortDescription",
+    "longDescription",
+    "developerName",
+    "category",
+    "capabilities",
+    "defaultPrompt",
+}
+codex_roots: set[Path] = set()
+for path in sorted(ROOT.glob("plugins/**/.codex-plugin/plugin.json")):
+    manifest = json_file(path)
+    plugin_root = path.parent.parent.resolve()
+    codex_roots.add(plugin_root)
+    name = manifest.get("name")
+    if not isinstance(name, str) or not NAME_RE.fullmatch(name) or name != plugin_root.name:
+        err(f"codex-manifest: {rel(path)} invalid name {name!r}")
+    skills = manifest.get("skills")
+    if not isinstance(skills, str) or not skills.startswith("./") or not (plugin_root / skills).resolve().is_dir():
+        err(f"codex-manifest: {rel(path)} invalid skills path {skills!r}")
+    interface = manifest.get("interface") or {}
+    missing_interface = CODEX_INTERFACE_REQUIRED - set(interface)
+    if missing_interface:
+        err(f"codex-manifest: {rel(path)} missing interface fields {sorted(missing_interface)}")
+    if not isinstance(interface.get("capabilities"), list):
+        err(f"codex-manifest: {rel(path)} capabilities must be a list")
+    claude_manifest = claude_manifests.get(plugin_root)
+    if claude_manifest and (manifest.get("name"), manifest.get("version")) != (claude_manifest.get("name"), claude_manifest.get("version")):
+        err(f"manifest-parity: {rel(path)} name/version differs from Claude manifest")
+
+for plugin_root in claude_manifests:
+    if plugin_root not in codex_roots:
+        err(f"codex-manifest: {rel(plugin_root)} has no .codex-plugin/plugin.json")
 
 
 # Skill contracts and local links.

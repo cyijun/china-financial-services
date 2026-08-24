@@ -63,6 +63,26 @@ scripts/
 
 ## 安装
 
+### Codex（CLI / 桌面端）
+
+仓库的5个子插件均提供原生`.codex-plugin/plugin.json`，可将GitHub仓库注册为Marketplace后按需添加。以下命令已按`codex-cli 0.149.0`的本机帮助核对；本项目不会替你安装插件。
+
+```bash
+codex plugin marketplace add cyijun/china-financial-services --ref main
+codex plugin add china-research-methodology@china-financial-services
+codex plugin add financial-analysis@china-financial-services
+codex plugin add equity-research@china-financial-services
+```
+
+两个自包含工作流包也可单独添加：
+
+```bash
+codex plugin add china-market-researcher@china-financial-services
+codex plugin add china-model-builder@china-financial-services
+```
+
+Codex会加载各插件的`skills/`。Claude专用的Managed Agents部署脚本与hooks不属于Codex运行时；Agent插件在Codex中以自包含Skill工作流运行。纵向插件请按`china-research-methodology` → `financial-analysis` → `equity-research`顺序添加。
+
 ### Kimi Code（CLI）
 
 #### 方式 A：将本仓库作为插件安装
