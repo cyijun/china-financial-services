@@ -1,0 +1,41 @@
+{
+  "description": "年份校验三层:UserPromptSubmit 关键词提醒 + WebSearch/WebFetch PreToolUse 参数检查 + PostToolUse 跨年输出检测(均为 command hook,毫秒级,符合规范)",
+  "hooks": {
+    "UserPromptSubmit": [
+      {
+        "matcher": "*",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash \"${CLAUDE_PLUGIN_ROOT}/hooks/check-prompt-year.sh\"",
+            "timeout": 5
+          }
+        ]
+      }
+    ],
+    "PreToolUse": [
+      {
+        "matcher": "WebSearch|WebFetch",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash \"${CLAUDE_PLUGIN_ROOT}/hooks/check-tool-year.sh\"",
+            "timeout": 5
+          }
+        ]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "WebSearch|WebFetch|Bash|Agent",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash \"${CLAUDE_PLUGIN_ROOT}/hooks/check-cross-year.sh\"",
+            "timeout": 5
+          }
+        ]
+      }
+    ]
+  }
+}

@@ -12,8 +12,13 @@ tools:
     default_config: { enabled: false }
     configs:
       - { name: read,  enabled: true }
+      - { name: write, enabled: true }
+      - { name: edit, enabled: true }
+      - { name: bash, enabled: true }
       - { name: grep,  enabled: true }
       - { name: glob,  enabled: true }
+      - { name: web_search, enabled: true }
+      - { name: web_fetch, enabled: true }
 
 skills:
   - { from_plugin: ../../plugins/agent-plugins/china-model-builder }

@@ -17,12 +17,14 @@ Given a sector/theme and angle, you deliver:
 
 ## Workflow
 
-1. **Scope the ask.** Confirm sector/theme, angle, universe boundary. Identify 8-15 defining names.
-2. **Write overview.** Invoke `sector-overview` skill. Use `tushare-data` skill for sector indices and financials; use web search for TAM and policy.
-3. **Map landscape.** Invoke `competitive-analysis` skill. Use `tushare-data` skill for financials; use web search for qualitative context.
-4. **Spread peers.** Invoke `tushare-data` skill to pull multiples (`daily_basic`, `fina_indicator`), then invoke `comps-analysis` for peer valuation table.
-5. **Surface ideas.** Invoke `idea-generation` against landscape and comps. Use `tushare-data` skill for quantitative screens; use web search for catalysts.
-6. **Assemble note.** Format research note; invoke `pptx-author` only if slides requested.
+1. **Scope and freeze evidence.** Confirm sector/theme, angle, universe and `as_of`; invoke `a-share-research-evidence` before using historical facts.
+2. **Route structured data.** Use `china-market-data`: Tushare is primary under the 6000-point profile; AKShare fallback must retain provenance and is rejected when strict PIT cannot be met.
+3. **Write overview.** Invoke `sector-overview`; use web/original sources for TAM and policy, and structured data only for fields it actually covers.
+4. **Map companies.** Invoke `competitive-analysis` and `a-share-company-underwriting`; tie every moat or management claim to observable evidence.
+5. **Spread and triangulate peers.** Pull same-date multiples and financials, invoke `comps-analysis`, then use `a-share-valuation-triangulation` to expose method disagreement.
+6. **Run conditional specialist checks.** Use `a-share-financial-forensics` for earnings quality, `a-share-earnings-delta` for event previews/reviews, and `a-share-factor-validation` for screens or backtests.
+7. **Surface research candidates.** Invoke `idea-generation` only as discovery; candidates are not recommendations. Record testable pillars with `a-share-thesis-tracker` when requested.
+8. **Red-team and assemble.** Invoke `a-share-research-red-team` before final note; use `pptx-author` only if slides are requested.
 
 ## Guardrails
 
@@ -34,10 +36,10 @@ Given a sector/theme and angle, you deliver:
 
 ## Skills this agent uses
 
-`tushare-data` · `sector-overview` · `competitive-analysis` · `comps-analysis` · `idea-generation` · `pptx-author`
+`china-market-data` · `a-share-research-evidence` · `a-share-company-underwriting` · `a-share-financial-forensics` · `a-share-earnings-delta` · `a-share-valuation-triangulation` · `a-share-thesis-tracker` · `a-share-factor-validation` · `a-share-research-red-team` · `sector-overview` · `competitive-analysis` · `comps-analysis` · `idea-generation` · `pptx-author`
 
 ## Data source priority
 
-1. `tushare-data` skill — primary for structured financial/valuation data (invokes Tushare interfaces such as `daily_basic`, `fina_indicator`, `income`, `moneyflow`, etc.)
-2. Web search — for industry reports, policy interpretation, news, thematic research
-3. Company announcements / annual reports — for audited figures and qualitative details
+1. Exchange/CNInfo/company filings — authoritative high-impact facts and exact publication time.
+2. `china-market-data` — Tushare-first structured data with explicit AKShare fallback metadata.
+3. Web search — industry reports, policy interpretation, news and thematic leads; never a silent replacement for original disclosures.

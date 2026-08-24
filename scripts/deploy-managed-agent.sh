@@ -6,8 +6,8 @@
 #   skills: [{path: ...}]                -> uploaded, referenced by skill_id
 #   callable_agents: [{manifest: ...}]   -> created first, referenced by agent id
 #
-# Reader subagents with an `output_schema` block get a thin validation wrapper
-# so their JSON is schema-checked before the orchestrator consumes it.
+# `output_schema` is intentionally rejected until the deployed API can enforce
+# it. Silently deleting a requested contract would create false assurance.
 #
 # Usage: scripts/deploy-managed-agent.sh <slug>
 #   e.g. scripts/deploy-managed-agent.sh gl-reconciler
@@ -30,11 +30,19 @@ req() {
            -H "content-type: application/json" "$@"
 }
 
-# jq + python(pyyaml) do the manifest→payload transform
+# jq plus either PyYAML or Ruby Psych do the manifest→payload transform.
 command -v jq >/dev/null || { echo "requires jq" >&2; exit 1; }
-python3 -c 'import yaml' 2>/dev/null || { echo "requires python3 + pyyaml" >&2; exit 1; }
+if python3 -c 'import yaml' 2>/dev/null; then
+  YAML_IMPL=python
+elif command -v ruby >/dev/null && ruby -e 'require "yaml"; require "json"' 2>/dev/null; then
+  YAML_IMPL=ruby
+else
+  echo "requires python3 + pyyaml or ruby + psych" >&2
+  exit 1
+fi
 yaml2json() {
-  python3 -c '
+  if [[ "$YAML_IMPL" == python ]]; then
+    python3 -c '
 import sys,os,re,yaml,json
 SAFE = re.compile(r"^[A-Za-z0-9._/:@-]*$")
 def sub(m):
@@ -49,13 +57,27 @@ t = open(sys.argv[1]).read()
 t = re.sub(r"\$\{([A-Z0-9_]+)\}", sub, t)
 json.dump(yaml.safe_load(t), sys.stdout)
 ' "$1"
+  else
+    ruby -ryaml -rjson -e '
+safe = /^[A-Za-z0-9._\/:@-]*$/
+text = File.read(ARGV[0])
+text = text.gsub(/\$\{([A-Z0-9_]+)\}/) do |match|
+  name = Regexp.last_match(1)
+  value = ENV[name]
+  next match if value.nil?
+  abort("refusing ${#{name}}: value contains characters outside [A-Za-z0-9._/:@-]") unless safe.match?(value)
+  value
+end
+print JSON.generate(YAML.safe_load(text, permitted_classes: [], aliases: false))
+' "$1"
+  fi
 }
 
 SKILL_CACHE_FILE="$(mktemp -t skillcache)"
 trap 'rm -f "$SKILL_CACHE_FILE"' EXIT
 upload_skill() {
   local path="$1" key cached
-  key="$(basename "$path")"
+  key="$(printf '%s' "$(cd "$path" && pwd)" | shasum -a 256 | awk '{print $1}')"
   cached=$(grep -m1 "^${key}=" "$SKILL_CACHE_FILE" 2>/dev/null | cut -d= -f2-)
   if [[ -n "$cached" ]]; then printf '%s' "$cached"; return; fi
   if [[ $DRY_RUN -eq 1 ]]; then
@@ -90,19 +112,18 @@ resolve_manifest() {
   base="$(cd "$(dirname "$file")" && pwd)"
   local json
   json=$(yaml2json "$file")
-  # Expand any {from_plugin: <dir>} into one {path: ...} per skills/* under that dir.
-  local fp
-  fp=$(jq -r '.skills[]? | select(.from_plugin) | .from_plugin' <<<"$json" | head -1)
-  if [[ -n "$fp" ]]; then
-    local plugdir expanded="[]"
+  # Expand every {from_plugin: <dir>} into one upload per skills/* directory.
+  local fp plugdir expanded="[]"
+  while IFS= read -r fp; do
+    [[ -n "$fp" ]] || continue
     plugdir="$(cd "$base/$fp" && pwd)"
     for sk in "$plugdir"/skills/*/; do
       [[ -d "$sk" ]] || continue
       expanded=$(jq --arg p "${sk%/}" '. + [{__upload:$p}]' <<<"$expanded")
     done
-    json=$(jq --argjson e "$expanded" \
-      '.skills = ((.skills // [] | map(select(.from_plugin | not))) + $e)' <<<"$json")
-  fi
+  done < <(jq -r '.skills[]? | .from_plugin // empty' <<<"$json")
+  json=$(jq --argjson e "$expanded" \
+    '.skills = ((.skills // [] | map(select(has("from_plugin") | not))) + $e)' <<<"$json")
   jq --arg base "$base" '
     .skills = ((.skills // []) | map(
       if .path then {__upload: ($base + "/" + .path)}
@@ -135,6 +156,11 @@ create_agent() {
   json=$(resolve_manifest "$file")
   json=$(inline_system "$json" "$base")
 
+  if jq -e '.output_schema != null' >/dev/null <<<"$json"; then
+    echo "output_schema is declared in $file but this deployer cannot enforce it" >&2
+    exit 1
+  fi
+
   skills_json="[]"
   while IFS= read -r p; do
     [[ -z "$p" ]] && continue
@@ -151,7 +177,7 @@ create_agent() {
     sid=${out%% *}; sver=${out##* }
     sub_ids=$(jq --arg i "$sid" --argjson v "$sver" '. + [{type:"agent", id:$i, version:$v}]' <<<"$sub_ids")
   done < <(jq -r '.callable_agents[]?.manifest // empty' <<<"$json")
-  json=$(jq --argjson c "$sub_ids" '.callable_agents=$c | del(.output_schema)' <<<"$json")
+  json=$(jq --argjson c "$sub_ids" '.callable_agents=$c' <<<"$json")
   [[ -n "${DEPLOY_DEBUG:-}" ]] && jq -c '{name, callable_agents}' <<<"$json" >&2
 
   if [[ $DRY_RUN -eq 1 ]]; then

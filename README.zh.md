@@ -15,8 +15,9 @@
 
 | 垂直插件 | Skills | 说明 |
 |---|---|---|
-| **financial-analysis** | `tushare-data`、`china-dcf-model`、`china-comps-analysis`、`china-macro-overview` | 核心财务建模与宏观数据工具 |
+| **financial-analysis** | `tushare-data`、`china-dcf-model`、`china-comps-analysis`、`3-statement-model`、`audit-xls`、`china-macro-overview` | 核心财务建模、审计与宏观工具；Claude声明方法论依赖 |
 | **equity-research** | `china-initiating-coverage` | 中国 A 股首次覆盖报告 |
+| **china-research-methodology** | `china-market-data` + 8个方法Skill | 6000积分Tushare主源、AKShare受控降级、PIT证据链、财务取证、估值、论点、因子验证与红队 |
 
 ## 仓库结构
 
@@ -28,6 +29,7 @@ plugins/
   vertical-plugins/
     financial-analysis/           # Skills（唯一数据源）
     equity-research/
+    china-research-methodology/   # 证据优先的方法论与中国数据路由
 managed-agent-cookbooks/
   china-market-researcher/        # 部署清单，用于 POST /v1/agents
   china-model-builder/
@@ -65,7 +67,7 @@ scripts/
 
 #### 方式 A：将本仓库作为插件安装
 
-添加 `https://github.com/cyijun/china-financial-services` 作为插件源。Kimi 会读取仓库根目录的 `.kimi-plugin/plugin.json` 并安装 `china-financial-services` 元插件，该插件暴露一个入口 skill，介绍所有包含的子插件。
+添加 `https://github.com/cyijun/china-financial-services` 作为插件源。Kimi 会读取仓库根目录清单并安装一个**目录入口**；它只介绍子插件，不会递归加载或直接路由子插件Skill。
 
 ```bash
 /plugins install https://github.com/cyijun/china-financial-services
@@ -76,20 +78,26 @@ scripts/
 ```bash
 /plugins install ./plugins/vertical-plugins/financial-analysis
 /plugins install ./plugins/vertical-plugins/equity-research
+/plugins install ./plugins/vertical-plugins/china-research-methodology
 /plugins install ./plugins/agent-plugins/china-market-researcher
 /plugins install ./plugins/agent-plugins/china-model-builder
 ```
 
 然后运行 `/plugins info <plugin-name>` 验证，并运行 `/reload` 激活。
 
+Kimi下请先安装`china-research-methodology`，再安装依赖它的`financial-analysis`；`equity-research`还依赖`financial-analysis`。两个Agent插件已自带其工作流所需Skill副本。
+
 智能体插件（`china-market-researcher`、`china-model-builder`）加载后会通过 `sessionStart.skill` 自动启动工作流。
 
 ### Claude Code（CLI）
+
+自动解析本仓库内插件依赖需要Claude Code 2.1.110或更高版本；旧版本请按`china-research-methodology` → `financial-analysis` → `equity-research`顺序手动安装。
 
 ```bash
 claude plugin marketplace add cyijun/china-financial-services
 claude plugin install china-market-researcher@china-financial-services
 claude plugin install china-model-builder@china-financial-services
+claude plugin install china-research-methodology@china-financial-services
 ```
 
 ### Claude Cowork（桌面端 / 网页版）
@@ -105,7 +113,7 @@ export ANTHROPIC_API_KEY=sk-ant-...
 scripts/deploy-managed-agent.sh china-market-researcher
 ```
 
-需要 `jq`、`zip`、`curl` 以及 `python3 + pyyaml`。
+需要 `jq`、`zip`、`curl`，以及`python3 + pyyaml`或`ruby + psych`之一。
 
 ## 开发
 
@@ -121,11 +129,15 @@ python3 scripts/sync-hooks.py
 
 # 所有 cookbook 干跑验证（CI 门禁）
 bash scripts/test-cookbooks.sh
+
+# 数据路由与PIT离线测试（无需SDK、Token或网络）
+python3 -m unittest -v tests.test_china_market_data
 ```
 
 ## 数据来源
 
-- **Tushare Pro** — 主要结构化数据（财务报表、估值指标、宏观数据）
+- **Tushare Pro** — 主要结构化数据；6000积分用于规划VIP财务截面和同花顺板块能力，真实权限仍按接口返回验证
+- **AKShare** — 补充公开网页行情、当前列表和交叉核对；无历史可得时点时不用于严格PIT回测
 - **网页搜索** — 行业报告、政策解读、新闻
 - **公司公告** — 经审计的数据及定性信息
 

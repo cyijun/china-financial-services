@@ -5,11 +5,12 @@
 """
 
 import tushare as ts
-import pandas as pd
 import os
 
-# 读取环境变量中的token, 或者读取本地记录的token
-token = os.getenv('TUSHARE_TOKEN') or ts.get_token()
+# 只读取进程环境中的Token，不使用持久化全局缓存。
+token = os.getenv('TUSHARE_TOKEN')
+if not token:
+    raise RuntimeError('TUSHARE_TOKEN is required; global token caches are not used')
 
 # 初始化pro接口
 pro = ts.pro_api(token)
@@ -20,7 +21,7 @@ def get_fund_list():
     获取基金列表
     """
     try:
-        data = pro.fund_basic(market='E', status='L', fields='ts_code,fund_name,fund_type,found_date,issue_date,delist_date')
+        data = pro.fund_basic(market='E', status='L', fields='ts_code,name,fund_type,found_date,issue_date,delist_date')
         print("基金列表获取成功：")
         print(data.head())
         return data
@@ -48,7 +49,7 @@ def get_fund_manager():
     获取基金经理数据
     """
     try:
-        data = pro.fund_manager(limit=10, fields='ts_code,fund_name,manager_name,begin_date,end_date')
+        data = pro.fund_manager(limit=10, fields='ts_code,ann_date,name,begin_date,end_date')
         print("基金经理数据获取成功：")
         print(data.head())
         return data

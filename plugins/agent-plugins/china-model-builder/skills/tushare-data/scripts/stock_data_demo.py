@@ -5,11 +5,12 @@
 """
 
 import tushare as ts
-import pandas as pd
 import os
 
-# 读取环境变量中的token, 或者读取本地记录的token
-token = os.getenv('TUSHARE_TOKEN') or ts.get_token()
+# 只读取进程环境中的Token，不使用持久化全局缓存。
+token = os.getenv('TUSHARE_TOKEN')
+if not token:
+    raise RuntimeError('TUSHARE_TOKEN is required; global token caches are not used')
 
 # 初始化pro接口
 pro = ts.pro_api(token)
@@ -48,7 +49,8 @@ def get_financial_data(ts_code, year, quarter):
     获取财务指标数据
     """
     try:
-        data = pro.fina_indicator(ts_code=ts_code, year=year, quarter=quarter)
+        period = {1: '0331', 2: '0630', 3: '0930', 4: '1231'}[quarter]
+        data = pro.fina_indicator(ts_code=ts_code, period=f'{year}{period}')
         print(f"{ts_code}财务指标数据获取成功：")
         print(data.head())
         return data

@@ -21,7 +21,7 @@ Artifact isolation 与重新验证原则。模型构建按阶段隔离，计算�
 
 | 阶段 | 工具 | 数据源 |
 |---|---|---|
-| 数据拉取 | `Read`, `Grep` | Tushare（只读） |
+| 数据拉取 | `Read`, `Grep`, `Bash`, `WebSearch`, `WebFetch` | Tushare/AKShare（只读）及原始披露 |
 | 模型搭建与输出 | `Read`, `Write`, `Edit`, `Bash`（沙箱化） | 无外部连接 |
 | 审计复核 | `Read`, `Grep` | 无外部连接 |
 
@@ -31,4 +31,4 @@ Artifact isolation 与重新验证原则。模型构建按阶段隔离，计算�
 
 本 Agent 仅负责模型搭建；估值结论及投资决策由用户自行判断。所有输出暂存于 `./out/`，须经人工审阅后方可使用。
 
-**Handoff:** 当被 `china-market-researcher` 或 `pitch-agent` 调用时，调用方的 `handoff_request` 由 `./scripts/orchestrate.py` 路由至此。
+**Handoff:** 当被 `china-market-researcher` 调用时，调用方的 `handoff_request` 由 `./scripts/orchestrate.py` 路由至此。

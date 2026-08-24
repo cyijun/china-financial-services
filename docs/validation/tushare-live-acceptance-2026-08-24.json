@@ -1,0 +1,615 @@
+{
+  "generated_at": "2026-08-24T11:46:51.581431+00:00",
+  "as_of_timezone": "Asia/Shanghai",
+  "as_of_local": "2026-08-24T19:46:46.752610+08:00",
+  "sdk": {
+    "python": "3.13.11",
+    "tushare": "1.4.29"
+  },
+  "security": {
+    "credential_source": "TUSHARE_TOKEN environment variable",
+    "token_in_report": false,
+    "returned_records_in_report": false
+  },
+  "scope": {
+    "points_profile": 6000,
+    "daily_trade_date": "20260821",
+    "financial_period": "20241231",
+    "historical_st_date": "20250813",
+    "yield_curve_date": "20200203"
+  },
+  "overall": "ready_with_optional_caveats",
+  "required_failures": [],
+  "optional_gaps": [
+    "china_yield_curve"
+  ],
+  "checks": [
+    {
+      "check_id": "trade_calendar",
+      "api_name": "trade_cal",
+      "required": true,
+      "params": {
+        "exchange": "SSE",
+        "start_date": "20260803",
+        "end_date": "20260823",
+        "fields": "exchange,cal_date,is_open,pretrade_date"
+      },
+      "contract_note": "",
+      "started_at": "2026-08-24T11:46:46.752632+00:00",
+      "status": "pass",
+      "row_count": 21,
+      "columns": [
+        "exchange",
+        "cal_date",
+        "is_open",
+        "pretrade_date"
+      ],
+      "issues": [],
+      "metrics": {
+        "observed_exchange": [
+          "SSE"
+        ]
+      },
+      "finished_at": "2026-08-24T11:46:46.873068+00:00"
+    },
+    {
+      "check_id": "daily_single_security",
+      "api_name": "daily",
+      "required": true,
+      "params": {
+        "ts_code": "600519.SH",
+        "trade_date": "20260821",
+        "fields": "ts_code,trade_date,open,high,low,close,vol,amount"
+      },
+      "contract_note": "Unadjusted A-share daily bar; vol is lots and amount is thousand CNY.",
+      "started_at": "2026-08-24T11:46:46.873134+00:00",
+      "status": "pass",
+      "row_count": 1,
+      "columns": [
+        "ts_code",
+        "trade_date",
+        "open",
+        "high",
+        "low",
+        "close",
+        "vol",
+        "amount"
+      ],
+      "issues": [],
+      "metrics": {
+        "observed_ts_code": [
+          "600519.SH"
+        ],
+        "observed_trade_date": [
+          "20260821"
+        ]
+      },
+      "finished_at": "2026-08-24T11:46:46.982490+00:00"
+    },
+    {
+      "check_id": "income_single_security",
+      "api_name": "income",
+      "required": true,
+      "params": {
+        "ts_code": "600519.SH",
+        "period": "20241231",
+        "fields": "ts_code,ann_date,f_ann_date,end_date,report_type,update_flag,revenue,n_income_attr_p"
+      },
+      "contract_note": "",
+      "started_at": "2026-08-24T11:46:46.982515+00:00",
+      "status": "pass",
+      "row_count": 1,
+      "columns": [
+        "ts_code",
+        "ann_date",
+        "f_ann_date",
+        "end_date",
+        "report_type",
+        "update_flag",
+        "revenue",
+        "n_income_attr_p"
+      ],
+      "issues": [],
+      "metrics": {
+        "observed_ts_code": [
+          "600519.SH"
+        ],
+        "observed_end_date": [
+          "20241231"
+        ]
+      },
+      "finished_at": "2026-08-24T11:46:47.102944+00:00"
+    },
+    {
+      "check_id": "balance_sheet_single_security",
+      "api_name": "balancesheet",
+      "required": true,
+      "params": {
+        "ts_code": "600519.SH",
+        "period": "20241231",
+        "fields": "ts_code,ann_date,f_ann_date,end_date,report_type,update_flag,total_assets,total_liab"
+      },
+      "contract_note": "",
+      "started_at": "2026-08-24T11:46:47.102962+00:00",
+      "status": "pass",
+      "row_count": 1,
+      "columns": [
+        "ts_code",
+        "ann_date",
+        "f_ann_date",
+        "end_date",
+        "report_type",
+        "update_flag",
+        "total_assets",
+        "total_liab"
+      ],
+      "issues": [],
+      "metrics": {
+        "observed_ts_code": [
+          "600519.SH"
+        ],
+        "observed_end_date": [
+          "20241231"
+        ]
+      },
+      "finished_at": "2026-08-24T11:46:47.203311+00:00"
+    },
+    {
+      "check_id": "cash_flow_single_security",
+      "api_name": "cashflow",
+      "required": true,
+      "params": {
+        "ts_code": "600519.SH",
+        "period": "20241231",
+        "fields": "ts_code,ann_date,f_ann_date,end_date,report_type,update_flag,n_cashflow_act"
+      },
+      "contract_note": "",
+      "started_at": "2026-08-24T11:46:47.203326+00:00",
+      "status": "pass",
+      "row_count": 1,
+      "columns": [
+        "ts_code",
+        "ann_date",
+        "f_ann_date",
+        "end_date",
+        "report_type",
+        "update_flag",
+        "n_cashflow_act"
+      ],
+      "issues": [],
+      "metrics": {
+        "observed_ts_code": [
+          "600519.SH"
+        ],
+        "observed_end_date": [
+          "20241231"
+        ]
+      },
+      "finished_at": "2026-08-24T11:46:47.306278+00:00"
+    },
+    {
+      "check_id": "financial_indicator_single_security",
+      "api_name": "fina_indicator",
+      "required": true,
+      "params": {
+        "ts_code": "600519.SH",
+        "period": "20241231",
+        "fields": "ts_code,ann_date,end_date,roe,roe_waa,grossprofit_margin,debt_to_assets,update_flag"
+      },
+      "contract_note": "",
+      "started_at": "2026-08-24T11:46:47.306298+00:00",
+      "status": "pass",
+      "row_count": 1,
+      "columns": [
+        "ts_code",
+        "ann_date",
+        "end_date",
+        "roe",
+        "roe_waa",
+        "grossprofit_margin",
+        "debt_to_assets",
+        "update_flag"
+      ],
+      "issues": [],
+      "metrics": {
+        "observed_ts_code": [
+          "600519.SH"
+        ],
+        "observed_end_date": [
+          "20241231"
+        ]
+      },
+      "finished_at": "2026-08-24T11:46:47.409868+00:00"
+    },
+    {
+      "check_id": "income_vip_cross_section",
+      "api_name": "income_vip",
+      "required": true,
+      "params": {
+        "period": "20241231",
+        "fields": "ts_code,ann_date,f_ann_date,end_date,report_type,update_flag,revenue,n_income_attr_p"
+      },
+      "contract_note": "",
+      "started_at": "2026-08-24T11:46:47.409890+00:00",
+      "status": "pass",
+      "row_count": 6998,
+      "columns": [
+        "ts_code",
+        "ann_date",
+        "f_ann_date",
+        "end_date",
+        "report_type",
+        "update_flag",
+        "revenue",
+        "n_income_attr_p"
+      ],
+      "issues": [],
+      "metrics": {
+        "distinct_ts_code": 6329,
+        "observed_end_date": [
+          "20241231"
+        ]
+      },
+      "finished_at": "2026-08-24T11:46:48.201973+00:00"
+    },
+    {
+      "check_id": "balance_sheet_vip_cross_section",
+      "api_name": "balancesheet_vip",
+      "required": true,
+      "params": {
+        "period": "20241231",
+        "fields": "ts_code,ann_date,f_ann_date,end_date,report_type,update_flag,total_assets,total_liab"
+      },
+      "contract_note": "",
+      "started_at": "2026-08-24T11:46:48.201992+00:00",
+      "status": "pass",
+      "row_count": 7000,
+      "columns": [
+        "ts_code",
+        "ann_date",
+        "f_ann_date",
+        "end_date",
+        "report_type",
+        "update_flag",
+        "total_assets",
+        "total_liab"
+      ],
+      "issues": [],
+      "metrics": {
+        "distinct_ts_code": 6315,
+        "observed_end_date": [
+          "20241231"
+        ]
+      },
+      "finished_at": "2026-08-24T11:46:48.573264+00:00"
+    },
+    {
+      "check_id": "cash_flow_vip_cross_section",
+      "api_name": "cashflow_vip",
+      "required": true,
+      "params": {
+        "period": "20241231",
+        "fields": "ts_code,ann_date,f_ann_date,end_date,report_type,update_flag,n_cashflow_act"
+      },
+      "contract_note": "",
+      "started_at": "2026-08-24T11:46:48.574032+00:00",
+      "status": "pass",
+      "row_count": 6400,
+      "columns": [
+        "ts_code",
+        "ann_date",
+        "f_ann_date",
+        "end_date",
+        "report_type",
+        "update_flag",
+        "n_cashflow_act"
+      ],
+      "issues": [],
+      "metrics": {
+        "distinct_ts_code": 4857,
+        "observed_end_date": [
+          "20241231"
+        ]
+      },
+      "finished_at": "2026-08-24T11:46:49.218298+00:00"
+    },
+    {
+      "check_id": "financial_indicator_vip_cross_section",
+      "api_name": "fina_indicator_vip",
+      "required": true,
+      "params": {
+        "period": "20241231",
+        "fields": "ts_code,ann_date,end_date,roe,roe_waa,grossprofit_margin,debt_to_assets,update_flag"
+      },
+      "contract_note": "",
+      "started_at": "2026-08-24T11:46:49.218904+00:00",
+      "status": "pass",
+      "row_count": 7502,
+      "columns": [
+        "ts_code",
+        "ann_date",
+        "end_date",
+        "roe",
+        "roe_waa",
+        "grossprofit_margin",
+        "debt_to_assets",
+        "update_flag"
+      ],
+      "issues": [],
+      "metrics": {
+        "distinct_ts_code": 6560,
+        "observed_end_date": [
+          "20241231"
+        ]
+      },
+      "finished_at": "2026-08-24T11:46:49.580946+00:00"
+    },
+    {
+      "check_id": "historical_industry_membership",
+      "api_name": "index_member_all",
+      "required": true,
+      "params": {
+        "is_new": "N",
+        "fields": "l1_code,l1_name,l2_code,l2_name,l3_code,l3_name,ts_code,name,in_date,out_date,is_new"
+      },
+      "contract_note": "Historical rows are interval evidence; a result at the row limit is not a complete all-market extract.",
+      "started_at": "2026-08-24T11:46:49.581608+00:00",
+      "status": "pass",
+      "row_count": 2458,
+      "columns": [
+        "l1_code",
+        "l1_name",
+        "l2_code",
+        "l2_name",
+        "l3_code",
+        "l3_name",
+        "ts_code",
+        "name",
+        "in_date",
+        "out_date",
+        "is_new"
+      ],
+      "issues": [],
+      "metrics": {
+        "observed_is_new": [
+          "N"
+        ],
+        "nonempty_in_date": 2458,
+        "nonempty_out_date": 2458,
+        "documented_row_limit": 2000,
+        "possible_truncation": false,
+        "documentation_limit_drift": true
+      },
+      "finished_at": "2026-08-24T11:46:49.845023+00:00"
+    },
+    {
+      "check_id": "historical_st_status",
+      "api_name": "stock_st",
+      "required": true,
+      "params": {
+        "trade_date": "20250813",
+        "fields": "ts_code,name,trade_date,type,type_name"
+      },
+      "contract_note": "",
+      "started_at": "2026-08-24T11:46:49.845851+00:00",
+      "status": "pass",
+      "row_count": 175,
+      "columns": [
+        "ts_code",
+        "name",
+        "trade_date",
+        "type",
+        "type_name"
+      ],
+      "issues": [],
+      "metrics": {
+        "observed_trade_date": [
+          "20250813"
+        ],
+        "documented_row_limit": 1000,
+        "possible_truncation": false,
+        "documentation_limit_drift": false
+      },
+      "finished_at": "2026-08-24T11:46:49.951085+00:00"
+    },
+    {
+      "check_id": "ths_index_catalog",
+      "api_name": "ths_index",
+      "required": true,
+      "params": {
+        "exchange": "A",
+        "type": "I",
+        "fields": "ts_code,name,count,exchange,list_date,type"
+      },
+      "contract_note": "Current catalog only; not point-in-time history.",
+      "started_at": "2026-08-24T11:46:49.952158+00:00",
+      "status": "pass",
+      "row_count": 777,
+      "columns": [
+        "ts_code",
+        "name",
+        "count",
+        "exchange",
+        "list_date",
+        "type"
+      ],
+      "issues": [],
+      "metrics": {
+        "distinct_ts_code": 777,
+        "observed_exchange": [
+          "A"
+        ],
+        "observed_type": [
+          "I"
+        ],
+        "documented_row_limit": 5000,
+        "possible_truncation": false,
+        "documentation_limit_drift": false
+      },
+      "finished_at": "2026-08-24T11:46:50.072313+00:00"
+    },
+    {
+      "check_id": "china_yield_curve",
+      "api_name": "yc_cb",
+      "required": false,
+      "params": {
+        "ts_code": "1001.CB",
+        "curve_type": "0",
+        "trade_date": "20200203",
+        "fields": "trade_date,ts_code,curve_name,curve_type,curve_term,yield"
+      },
+      "contract_note": "Official docs classify yc_cb as a separately granted permission, independent of points.",
+      "started_at": "2026-08-24T11:46:50.072434+00:00",
+      "status": "expected_permission_gap",
+      "row_count": 0,
+      "columns": [],
+      "issues": [
+        "抱歉，您没有接口(yc_cb)访问权限，权限的具体详情访问：https://tushare.pro/document/1?doc_id=108。"
+      ],
+      "metrics": {},
+      "finished_at": "2026-08-24T11:46:50.179283+00:00"
+    },
+    {
+      "check_id": "ths_current_membership",
+      "api_name": "ths_member",
+      "required": true,
+      "params": {
+        "ts_code": "700301.TI",
+        "fields": "ts_code,con_code,con_name,weight,in_date,out_date,is_new"
+      },
+      "contract_note": "Current membership snapshot; official fields in_date/out_date are not populated reliably.",
+      "started_at": "2026-08-24T11:46:50.179400+00:00",
+      "status": "pass",
+      "row_count": 119,
+      "columns": [
+        "ts_code",
+        "con_code",
+        "con_name",
+        "weight",
+        "in_date",
+        "out_date",
+        "is_new"
+      ],
+      "issues": [],
+      "metrics": {
+        "distinct_con_code": 119,
+        "observed_ts_code": [
+          "700301.TI"
+        ],
+        "documented_row_limit": 5000,
+        "possible_truncation": false,
+        "documentation_limit_drift": false
+      },
+      "finished_at": "2026-08-24T11:46:50.290044+00:00"
+    }
+  ],
+  "router_checks": [
+    {
+      "check_id": "router_daily_pit",
+      "dataset": "daily_bar",
+      "required": true,
+      "params": {
+        "ts_code": "600519.SH",
+        "trade_date": "20260821"
+      },
+      "as_of": "2026-08-21T16:30:00+08:00",
+      "require_pit": true,
+      "started_at": "2026-08-24T11:46:50.294512+00:00",
+      "status": "pass",
+      "issues": [],
+      "row_count": 1,
+      "metadata": {
+        "interface": "daily",
+        "permission_verified_live": true,
+        "pit_grade": "trade_date",
+        "contract_status": "full",
+        "row_count_before_pit_filter": 1,
+        "row_count": 1,
+        "duplicate_key_rows": 0,
+        "truncation_suspected": false,
+        "documentation_limit_drift": false
+      },
+      "finished_at": "2026-08-24T11:46:50.395190+00:00"
+    },
+    {
+      "check_id": "router_income_vip_pit",
+      "dataset": "income",
+      "required": true,
+      "params": {
+        "period": "20241231",
+        "universe_mode": "cross_section",
+        "fields": "ts_code,ann_date,f_ann_date,end_date,revenue,n_income_attr_p,update_flag"
+      },
+      "as_of": "2026-08-24T23:59:59+08:00",
+      "require_pit": true,
+      "started_at": "2026-08-24T11:46:50.395195+00:00",
+      "status": "pass",
+      "issues": [],
+      "row_count": 6998,
+      "metadata": {
+        "interface": "income_vip",
+        "permission_verified_live": true,
+        "pit_grade": "reported_with_availability",
+        "contract_status": "full",
+        "row_count_before_pit_filter": 6998,
+        "row_count": 6998,
+        "duplicate_key_rows": 0,
+        "truncation_suspected": false,
+        "documentation_limit_drift": false
+      },
+      "finished_at": "2026-08-24T11:46:51.225283+00:00"
+    },
+    {
+      "check_id": "router_historical_membership_pit",
+      "dataset": "industry_membership",
+      "required": true,
+      "params": {
+        "ts_code": "600519.SH"
+      },
+      "as_of": "2020-01-02T23:59:59+08:00",
+      "require_pit": true,
+      "started_at": "2026-08-24T11:46:51.225287+00:00",
+      "status": "pass",
+      "issues": [],
+      "row_count": 1,
+      "metadata": {
+        "interface": "index_member_all",
+        "permission_verified_live": true,
+        "pit_grade": "membership_interval",
+        "contract_status": "full",
+        "row_count_before_pit_filter": 1,
+        "row_count": 1,
+        "duplicate_key_rows": 0,
+        "truncation_suspected": false,
+        "documentation_limit_drift": false
+      },
+      "finished_at": "2026-08-24T11:46:51.465834+00:00"
+    },
+    {
+      "check_id": "router_ths_membership_snapshot",
+      "dataset": "ths_membership",
+      "required": true,
+      "params": {
+        "ts_code": "700301.TI"
+      },
+      "as_of": null,
+      "require_pit": false,
+      "started_at": "2026-08-24T11:46:51.465844+00:00",
+      "status": "pass",
+      "issues": [],
+      "row_count": 119,
+      "metadata": {
+        "interface": "ths_member",
+        "permission_verified_live": true,
+        "pit_grade": "current_snapshot",
+        "contract_status": "full",
+        "row_count_before_pit_filter": 119,
+        "row_count": 119,
+        "duplicate_key_rows": 0,
+        "truncation_suspected": false,
+        "documentation_limit_drift": false
+      },
+      "finished_at": "2026-08-24T11:46:51.581403+00:00"
+    }
+  ]
+}

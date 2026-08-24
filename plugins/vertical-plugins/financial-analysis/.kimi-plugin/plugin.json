@@ -1,6 +1,6 @@
 {
   "name": "financial-analysis",
-  "version": "2.0.0",
+  "version": "2.1.0",
   "description": "Core financial modeling and analysis tools powered by Tushare: A-share market data, financial statements, valuation, and macro data",
   "author": {
     "name": "Tushare Edition"
@@ -11,12 +11,6 @@
     "shortDescription": "A-share financial modeling and macro data tools",
     "longDescription": "Core financial modeling and analysis tools powered by Tushare for China A-share market research, including valuation, comps, DCF and macro overview skills.",
     "developerName": "Tushare Edition",
-    "capabilities": [
-      "Read",
-      "Write",
-      "Bash",
-      "WebSearch"
-    ],
     "websiteURL": "https://github.com/cyijun/china-financial-services"
   }
 }

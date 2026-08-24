@@ -22,8 +22,8 @@ See [`steering-examples.json`](./steering-examples.json). Kick from a research-q
 | 阶段 | 接触外部材料？ | 工具 | 数据源 |
 |---|---|---|---|
 | 读取外部材料 | **是** | `Read`, `Grep` only | 无直接 MCP |
-| 数据分析与同业比较 | 否 | `Read`, `Grep`, `Glob` | Tushare（只读） |
-| 报告撰写与输出 | 否 | `Read`, `Write`, `Edit` | 无外部连接 |
+| 数据分析与同业比较 | 否 | `Read`, `Grep`, `Glob`, `Bash`, `WebSearch`, `WebFetch` | Tushare/AKShare（只读）与原始网页 |
+| 报告撰写与输出 | 否 | `Read`, `Write`, `Edit` | 无外部发布 |
 
 所有输出暂存于 `./out/`，须经人工审阅后方可使用。每个数字必须注明来源；若数据无法从 Tushare Pro 或公开财报中溯源，标注 `[未核实]`。
 

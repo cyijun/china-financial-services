@@ -3,6 +3,7 @@
   "owner": {
     "name": "Tushare Edition"
   },
+  "description": "Evidence-first China A-share research and financial-modeling plugins with auditable Tushare/AKShare data routing.",
   "plugins": [
     {
       "name": "financial-analysis",
@@ -13,6 +14,11 @@
       "name": "equity-research",
       "source": "./plugins/vertical-plugins/equity-research",
       "description": "Equity research tools for China A-share market: earnings analysis, initiating coverage reports, and research workflows powered by Tushare"
+    },
+    {
+      "name": "china-research-methodology",
+      "source": "./plugins/vertical-plugins/china-research-methodology",
+      "description": "Evidence-first A-share research methodology with Tushare/AKShare routing, PIT controls, forensics, valuation, thesis tracking, factor validation, and red-team review"
     },
     {
       "name": "china-market-researcher",
