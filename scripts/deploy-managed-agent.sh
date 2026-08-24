@@ -73,7 +73,7 @@ print JSON.generate(YAML.safe_load(text, permitted_classes: [], aliases: false))
   fi
 }
 
-SKILL_CACHE_FILE="$(mktemp -t skillcache)"
+SKILL_CACHE_FILE="$(mktemp)"
 trap 'rm -f "$SKILL_CACHE_FILE"' EXIT
 upload_skill() {
   local path="$1" key cached
@@ -85,8 +85,9 @@ upload_skill() {
     echo "${key}=${cached}" >>"$SKILL_CACHE_FILE"
     printf '%s' "$cached"; return
   fi
-  local resp id zip
-  zip="$(mktemp -t skill).zip"
+  local resp id zip zip_dir
+  zip_dir="$(mktemp -d)"
+  zip="$zip_dir/skill.zip"
   (cd "$(dirname "$path")" && zip -qr "$zip" "$(basename "$path")")
   # /v1/skills uses its own beta header and multipart, not the managed-agents JSON path
   resp=$(curl -sS "$API/v1/skills" \
@@ -95,7 +96,7 @@ upload_skill() {
     -H "anthropic-beta: skills-2025-10-02" \
     -F "display_title=${SKILL_TITLE_PREFIX:-}$(basename "$path")" \
     -F "files[]=@$zip")
-  rm -f "$zip"
+  rm -rf "$zip_dir"
   id=$(jq -r '.id // empty' <<<"$resp")
   if [[ -z "$id" ]]; then
     echo "POST /v1/skills failed for $path:" >&2

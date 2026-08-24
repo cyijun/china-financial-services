@@ -7,7 +7,7 @@ ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 fail=0
 for d in "$ROOT"/managed-agent-cookbooks/*/; do
   slug=$(basename "$d")
-  if ! bash "$ROOT/scripts/deploy-managed-agent.sh" "$slug" --dry-run 2>&1 | tail -n +2 | python3 -c "
+  if ! bash "$ROOT/scripts/deploy-managed-agent.sh" "$slug" --dry-run | sed '1{/^# --dry-run:/d;}' | python3 -c "
 import json,sys
 b=json.load(sys.stdin)
 errs=[]
