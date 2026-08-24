@@ -207,6 +207,7 @@ def _base_specs(latest_open_date: str, now: datetime) -> List[CheckSpec]:
         CheckSpec("fund_basic_active", "fund_basic", {"market": "E", "status": "L", "fields": "ts_code,market,status,found_date,list_date,delist_date"}, ("ts_code", "market", "status", "list_date", "delist_date"), min_rows=100, distinct_column="ts_code", min_distinct=100, expected_values={"market": "E", "status": "L"}, documented_row_limit=15000),
         CheckSpec("fund_daily_single_security", "fund_daily", {"ts_code": DEFAULT_FUND_TS_CODE, "trade_date": latest_open_date, "fields": "ts_code,trade_date,open,high,low,close,vol,amount"}, ("ts_code", "trade_date", "open", "high", "low", "close", "vol", "amount"), expected_values={"ts_code": DEFAULT_FUND_TS_CODE, "trade_date": latest_open_date}, documented_row_limit=5000, contract_note="ETF daily bar; vol is lots and amount is thousand CNY."),
         CheckSpec("fund_nav_history", "fund_nav", {"ts_code": DEFAULT_FUND_TS_CODE, "start_date": recent_start, "end_date": latest_open_date, "fields": "ts_code,ann_date,nav_date,unit_nav,accum_nav,adj_nav"}, ("ts_code", "ann_date", "nav_date", "unit_nav", "accum_nav", "adj_nav"), expected_values={"ts_code": DEFAULT_FUND_TS_CODE}, require_any_nonempty=("ann_date", "nav_date", "unit_nav")),
+        CheckSpec("fund_share_history", "fund_share", {"ts_code": DEFAULT_FUND_TS_CODE, "start_date": recent_start, "end_date": latest_open_date, "fields": "ts_code,trade_date,fd_share"}, ("ts_code", "trade_date", "fd_share"), expected_values={"ts_code": DEFAULT_FUND_TS_CODE}, require_any_nonempty=("trade_date", "fd_share"), documented_row_limit=2000, contract_note="fd_share is ten-thousand shares; trade_date is an observation/change date, not a documented release timestamp."),
         CheckSpec("income_single_security", "income", {"ts_code": DEFAULT_TS_CODE, "period": FINANCIAL_PERIOD, "fields": financial_fields + ",revenue,n_income_attr_p"}, ("ts_code", "ann_date", "f_ann_date", "end_date", "revenue", "n_income_attr_p"), expected_values={"ts_code": DEFAULT_TS_CODE, "end_date": FINANCIAL_PERIOD}),
         CheckSpec("balance_sheet_single_security", "balancesheet", {"ts_code": DEFAULT_TS_CODE, "period": FINANCIAL_PERIOD, "fields": financial_fields + ",total_assets,total_liab"}, ("ts_code", "ann_date", "f_ann_date", "end_date", "total_assets", "total_liab"), expected_values={"ts_code": DEFAULT_TS_CODE, "end_date": FINANCIAL_PERIOD}),
         CheckSpec("cash_flow_single_security", "cashflow", {"ts_code": DEFAULT_TS_CODE, "period": FINANCIAL_PERIOD, "fields": financial_fields + ",n_cashflow_act"}, ("ts_code", "ann_date", "f_ann_date", "end_date", "n_cashflow_act"), expected_values={"ts_code": DEFAULT_TS_CODE, "end_date": FINANCIAL_PERIOD}),
@@ -274,6 +275,7 @@ def _run_router_checks(token: str, latest_open: str, ths_code: str) -> List[Dict
     cases = [
         ("router_daily_pit", "daily_bar", {"ts_code": DEFAULT_TS_CODE, "trade_date": latest_open}, f"{latest_open[:4]}-{latest_open[4:6]}-{latest_open[6:]}T16:30:00+08:00", True, "daily", 1),
         ("router_fund_daily_pit", "fund_daily_bar", {"ts_code": DEFAULT_FUND_TS_CODE, "trade_date": latest_open}, f"{latest_open[:4]}-{latest_open[4:6]}-{latest_open[6:]}T16:30:00+08:00", True, "fund_daily", 1),
+        ("router_fund_share_observation", "fund_share", {"ts_code": DEFAULT_FUND_TS_CODE, "start_date": "20250101", "end_date": latest_open}, latest_open, False, "fund_share", 1),
         ("router_income_vip_pit", "income", {"period": FINANCIAL_PERIOD, "universe_mode": "cross_section", "fields": "ts_code,ann_date,f_ann_date,end_date,revenue,n_income_attr_p,update_flag"}, "2026-08-24T23:59:59+08:00", True, "income_vip", 100),
         ("router_historical_membership_pit", "industry_membership", {"ts_code": DEFAULT_TS_CODE}, "2020-01-02T23:59:59+08:00", True, "index_member_all", 1),
         ("router_ths_membership_snapshot", "ths_membership", {"ts_code": ths_code}, None, False, "ths_member", 1),
@@ -386,20 +388,23 @@ def run(output: Path, strict_optional: bool = False) -> int:
     attempted_interfaces = {item.get("api_name") for item in results}
     declared_coverage = []
     for dataset, spec in sorted(module.TUSHARE_ENDPOINTS.items()):
-        interfaces = [("base", spec.api_name)]
+        interfaces = [("base", spec.api_name, spec.min_points)]
         if spec.vip_api_name:
-            interfaces.append(("vip", spec.vip_api_name))
-        for route, interface in interfaces:
+            interfaces.append(("vip", spec.vip_api_name, spec.vip_min_points))
+        for route, interface, min_points in interfaces:
+            profile_eligible = min_points is None or 6000 >= min_points
             declared_coverage.append(
                 {
                     "dataset": dataset,
                     "route": route,
                     "interface": interface,
+                    "documented_min_points": min_points,
+                    "profile_eligible": profile_eligible,
                     "attempted_live": interface in attempted_interfaces,
                     "check_statuses": [item.get("status") for item in results if item.get("api_name") == interface],
                 }
             )
-    unattempted_declared = [f"{item['dataset']}:{item['route']}" for item in declared_coverage if not item["attempted_live"]]
+    unattempted_declared = [f"{item['dataset']}:{item['route']}" for item in declared_coverage if item["profile_eligible"] and not item["attempted_live"]]
 
     required_failures = [item["check_id"] for item in results if item["required"] and item["status"] != "pass"]
     required_failures.extend(f"router:{item['check_id']}" for item in router_checks if item["required"] and item["status"] != "pass")
@@ -426,7 +431,7 @@ def run(output: Path, strict_optional: bool = False) -> int:
         "overall": overall,
         "required_failures": required_failures,
         "optional_gaps": optional_gaps,
-        "acceptance_claim": "all declared Tushare router interfaces attempted live" if not unattempted_declared else "partial declared-interface coverage",
+        "acceptance_claim": "all 6000-profile-eligible Tushare router interfaces attempted live" if not unattempted_declared else "partial 6000-profile interface coverage",
         "declared_dataset_coverage": declared_coverage,
         "unattempted_declared_datasets": unattempted_declared,
         "checks": results,

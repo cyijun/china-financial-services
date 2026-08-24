@@ -72,6 +72,18 @@ class FakeTushare:
         self.calls.append(("fund_nav", params))
         return FakeFrame([{"ts_code": "510300.SH", "ann_date": "20250103", "nav_date": "20250102", "unit_nav": 4.05, "accum_nav": 4.05}])
 
+    def fund_share(self, **params):
+        self.calls.append(("fund_share", params))
+        return FakeFrame([{"ts_code": "510300.SH", "trade_date": "20250102", "fd_share": 12345.6}])
+
+    def etf_basic(self, **params):
+        self.calls.append(("etf_basic", params))
+        return FakeFrame([{"ts_code": "510300.SH", "index_code": "000300.SH", "list_date": "20120528", "mgt_fee": 0.15}])
+
+    def etf_index(self, **params):
+        self.calls.append(("etf_index", params))
+        return FakeFrame([{"ts_code": params.get("ts_code", "000990.CSI"), "indx_name": "测试指数", "pub_date": "20110802", "bp": 1000}])
+
     def index_member_all(self, **params):
         self.calls.append(("index_member_all", params))
         if params.get("is_new") == "Y":
@@ -130,6 +142,13 @@ class FakeAkshare:
         if self.amount:
             first["成交额"] = 123000
         return FakeFrame([first, {"日期": "2025-01-03", "开盘": 10.0, "收盘": 10.2, "成交量": 120}])
+
+    def fund_etf_hist_em(self, **params):
+        self.calls.append(params)
+        return FakeFrame([
+            {"日期": "2025-01-02", "开盘": 3.9, "收盘": 4.0, "最高": 4.1, "最低": 3.8, "成交量": 1000, "成交额": 4000000},
+            {"日期": "2025-01-03", "开盘": 4.0, "收盘": 4.1, "最高": 4.2, "最低": 3.9, "成交量": 1200, "成交额": 4920000},
+        ])
 
     def stock_info_a_code_name(self):
         return FakeFrame([{"code": "920001", "name": "北交样例"}])
@@ -228,6 +247,29 @@ class ChinaMarketDataTests(unittest.TestCase):
         self.assertEqual(nav_after.records[0]["unit_nav"], 4.05)
         self.assertEqual([call[1]["status"] for call in provider.client.calls if call[0] == "fund_basic"], ["L", "D", "I", "L", "D", "I"])
 
+    def test_fund_share_units_and_unknown_release_time_fail_strict_pit(self):
+        provider = module.TushareProvider(client=FakeTushare(), points_profile=6000)
+        result = provider.fetch("fund_share", {"ts_code": "510300.SH", "trade_date": "20250102"}, as_of="20250102")
+        self.assertEqual(result.records[0]["fd_share"], 12345.6)
+        self.assertEqual(result.metadata["units"]["fd_share"], "ten_thousand_shares")
+        self.assertEqual(result.metadata["pit_grade"], "observation_date_without_release_time")
+        with self.assertRaises(module.DataProviderError) as caught:
+            provider.fetch("fund_share", {"ts_code": "510300.SH"}, as_of="20250102", require_pit=True)
+        self.assertEqual(caught.exception.code, "pit_not_supported")
+
+    def test_8000_point_etf_mapping_is_declared_but_not_available_to_6000_profile(self):
+        capability = next(row for row in module.capability_manifest(6000)["capabilities"] if row["provider"] == "tushare" and row["dataset"] == "etf_master")
+        self.assertFalse(capability["profile_eligible"])
+        self.assertEqual(capability["interface"], "etf_basic")
+        with self.assertRaises(module.DataProviderError) as caught:
+            module.TushareProvider(client=FakeTushare(), points_profile=6000).fetch("etf_basic")
+        self.assertEqual(caught.exception.code, "profile_points_insufficient")
+        result = module.TushareProvider(client=FakeTushare(), points_profile=8000).fetch("etf_master")
+        self.assertEqual(result.records[0]["index_code"], "000300.SH")
+        self.assertEqual(result.metadata["pit_grade"], "current_snapshot")
+        index_result = module.TushareProvider(client=FakeTushare(), points_profile=8000).fetch("etf_index", {"ts_code": "000990.CSI"})
+        self.assertEqual(index_result.records[0]["ts_code"], "000990.CSI")
+
     def test_security_master_rejects_nonhistorical_fields(self):
         provider = module.TushareProvider(client=FakeTushare())
         with self.assertRaises(module.DataProviderError) as caught:
@@ -273,6 +315,28 @@ class ChinaMarketDataTests(unittest.TestCase):
         self.assertEqual(result.records[0]["ts_code"], "600000.SH")
         self.assertEqual(result.records[0]["amount"], 123.0)
         self.assertEqual(result.metadata["units"]["amount"], "thousand_CNY")
+
+    def test_akshare_etf_daily_fallback_is_normalized_and_adjustment_is_explicit(self):
+        fake = FakeAkshare()
+        result = module.AkshareProvider(client=fake).fetch(
+            "fund_daily_bar",
+            {"ts_code": "510300.SH", "start_date": "20250101", "end_date": "20250103"},
+            as_of="20250102",
+            require_pit=True,
+        )
+        self.assertEqual(result.records[0]["ts_code"], "510300.SH")
+        self.assertEqual(result.records[0]["amount"], 4000.0)
+        self.assertEqual(result.metadata["units"]["amount"], "thousand_CNY")
+        self.assertEqual(result.metadata["adjustment_mode"], "raw")
+        self.assertNotIn("timeout", fake.calls[0])
+        with self.assertRaises(module.DataProviderError) as caught:
+            module.AkshareProvider(client=FakeAkshare()).fetch(
+                "fund_daily_bar",
+                {"ts_code": "510300.SH", "adjust": "qfq"},
+                as_of="20250102",
+                require_pit=True,
+            )
+        self.assertEqual(caught.exception.code, "adjustment_not_pit_safe")
 
     def test_akshare_fallback_translates_trade_date_and_drops_fields(self):
         fake = FakeAkshare()

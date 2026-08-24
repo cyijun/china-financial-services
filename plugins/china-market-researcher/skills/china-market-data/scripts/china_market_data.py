@@ -23,7 +23,7 @@ from typing import Any, Dict, Iterable, List, Mapping, Optional, Sequence, Tuple
 from zoneinfo import ZoneInfo
 
 
-SNAPSHOT_DATE = "2026-08-24"
+SNAPSHOT_DATE = "2026-08-25"
 DEFAULT_POINTS_PROFILE = 6000
 SHANGHAI = ZoneInfo("Asia/Shanghai")
 SENSITIVE_MARKERS = ("token", "secret", "password", "api_key", "apikey", "credential")
@@ -126,6 +126,9 @@ TUSHARE_ENDPOINTS: Dict[str, EndpointSpec] = {
     "fund_master": EndpointSpec("fund_basic", 2000, "listing_interval", DOC + "19", ("list_date", "delist_date"), max_rows=15000, required_fields=("ts_code",), primary_key=("ts_code",), date_fields=("found_date", "list_date", "delist_date", "due_date")),
     "fund_daily_bar": EndpointSpec("fund_daily", 5000, "trade_date", DOC + "127", ("trade_date",), max_rows=5000, required_fields=("ts_code", "trade_date"), primary_key=("ts_code", "trade_date"), date_fields=("trade_date",), numeric_fields=("open", "high", "low", "close", "pre_close", "change", "pct_chg", "vol", "amount"), nonnegative_fields=("open", "high", "low", "close", "pre_close", "vol", "amount"), units=(("vol", "lots"), ("amount", "thousand_CNY"))),
     "fund_nav": EndpointSpec("fund_nav", 2000, "reported_with_availability", DOC + "119", ("ann_date",), required_fields=("ts_code", "nav_date"), primary_key=("ts_code", "nav_date", "ann_date"), version_key=("ts_code", "nav_date"), date_fields=("ann_date", "nav_date"), numeric_fields=("unit_nav", "accum_nav", "accum_div", "net_asset", "total_netasset", "adj_nav"), nonnegative_fields=("unit_nav", "accum_nav", "accum_div", "net_asset", "total_netasset", "adj_nav")),
+    "fund_share": EndpointSpec("fund_share", 2000, "observation_date_without_release_time", DOC + "207", ("trade_date",), max_rows=2000, required_fields=("ts_code", "trade_date", "fd_share"), primary_key=("ts_code", "trade_date"), date_fields=("trade_date",), numeric_fields=("fd_share",), nonnegative_fields=("fd_share",), units=(("fd_share", "ten_thousand_shares"),), permission_note="trade_date is the change/observation date; the official interface does not document an intraday release timestamp"),
+    "etf_master": EndpointSpec("etf_basic", 8000, "current_snapshot", DOC + "385", max_rows=5000, required_fields=("ts_code",), primary_key=("ts_code",), date_fields=("setup_date", "list_date"), numeric_fields=("mgt_fee",), nonnegative_fields=("mgt_fee",), permission_note="8000_points_required; unavailable under the default 6000-point profile"),
+    "etf_index_master": EndpointSpec("etf_index", 8000, "current_snapshot", DOC + "386", max_rows=5000, required_fields=("ts_code",), primary_key=("ts_code",), date_fields=("pub_date", "base_date"), numeric_fields=("bp",), nonnegative_fields=("bp",), permission_note="8000_points_required; unavailable under the default 6000-point profile"),
     "index_weight": EndpointSpec("index_weight", 2000, "trade_date", DOC + "96", ("trade_date",), required_fields=("index_code", "con_code", "trade_date", "weight"), primary_key=("index_code", "con_code", "trade_date"), date_fields=("trade_date",), numeric_fields=("weight",), nonnegative_fields=("weight",), units=(("weight", "percent"),)),
     "industry_classification": EndpointSpec("index_classify", 2000, "classification_version", DOC + "181", max_rows=10000),
     "industry_membership": EndpointSpec("index_member_all", 2000, "membership_interval", DOC + "335", ("in_date", "out_date"), max_rows=2000, required_fields=("ts_code", "in_date"), primary_key=("l1_code", "l2_code", "l3_code", "ts_code", "in_date")),
@@ -140,6 +143,7 @@ TUSHARE_ENDPOINTS: Dict[str, EndpointSpec] = {
 AKSHARE_ENDPOINTS: Dict[str, EndpointSpec] = {
     "security_master": EndpointSpec("stock_info_a_code_name", None, "current_snapshot", "https://akshare.akfamily.xyz/data/stock/stock.html", max_rows=10000, required_fields=("ts_code",), primary_key=("ts_code",)),
     "daily_bar": EndpointSpec("stock_zh_a_hist", None, "trade_date", "https://akshare.akfamily.xyz/data/stock/stock.html", ("trade_date",), max_rows=None, required_fields=("ts_code", "trade_date"), primary_key=("ts_code", "trade_date"), date_fields=("trade_date",), numeric_fields=("open", "high", "low", "close", "vol", "amount"), nonnegative_fields=("open", "high", "low", "close", "vol", "amount"), units=(("vol", "lots"), ("amount", "thousand_CNY"))),
+    "fund_daily_bar": EndpointSpec("fund_etf_hist_em", None, "trade_date", "https://akshare.akfamily.xyz/data/fund/fund_public.html", ("trade_date",), max_rows=None, required_fields=("ts_code", "trade_date"), primary_key=("ts_code", "trade_date"), date_fields=("trade_date",), numeric_fields=("open", "high", "low", "close", "vol", "amount"), nonnegative_fields=("open", "high", "low", "close", "vol", "amount"), units=(("vol", "provider_reported_unspecified"), ("amount", "thousand_CNY")), permission_note="dynamic qfq/hfq responses are not strict-PIT safe; raw history remains scrape-derived; volume unit is not asserted by the cited AKShare interface documentation"),
     "spot_snapshot": EndpointSpec("stock_zh_a_spot_em", None, "current_snapshot", "https://akshare.akfamily.xyz/data/stock/stock.html", max_rows=10000),
     "industry_list": EndpointSpec("stock_board_industry_name_em", None, "current_snapshot", "https://akshare.akfamily.xyz/data/stock/stock.html", max_rows=1000),
     "industry_membership": EndpointSpec("stock_board_industry_cons_em", None, "current_snapshot", "https://akshare.akfamily.xyz/data/stock/stock.html", max_rows=1000),
@@ -160,6 +164,9 @@ DATASET_ALIASES = {
     "stk_limit": "price_limit",
     "fund_basic": "fund_master",
     "fund_daily": "fund_daily_bar",
+    "fund_etf_hist_em": "fund_daily_bar",
+    "etf_basic": "etf_master",
+    "etf_index": "etf_index_master",
     "index_weight": "index_weight",
     "index_classify": "industry_classification",
     "index_member_all": "industry_membership",
@@ -444,6 +451,7 @@ def _normalize_akshare(dataset: str, rows: Iterable[Dict[str, Any]], ts_code: Op
         return _normalize_akshare_yield_curve(rows, curve_type)
     mappings = {
         "daily_bar": {"日期": "trade_date", "开盘": "open", "收盘": "close", "最高": "high", "最低": "low", "成交量": "vol", "成交额": "amount", "振幅": "amplitude", "涨跌幅": "pct_chg", "涨跌额": "change", "换手率": "turnover_rate"},
+        "fund_daily_bar": {"日期": "trade_date", "开盘": "open", "收盘": "close", "最高": "high", "最低": "low", "成交量": "vol", "成交额": "amount", "振幅": "amplitude", "涨跌幅": "pct_chg", "涨跌额": "change", "换手率": "turnover_rate"},
         "security_master": {"code": "symbol", "name": "name", "代码": "symbol", "名称": "name"},
     }
     rename = mappings.get(dataset, {})
@@ -452,7 +460,7 @@ def _normalize_akshare(dataset: str, rows: Iterable[Dict[str, Any]], ts_code: Op
         row = {rename.get(key, key): value for key, value in raw.items()}
         if dataset == "security_master" and row.get("symbol"):
             row["ts_code"] = _canonical_ts_code(row["symbol"])
-        if dataset == "daily_bar":
+        if dataset in {"daily_bar", "fund_daily_bar"}:
             row["ts_code"] = _canonical_ts_code(ts_code)
             row["trade_date"] = _date_key(row.get("trade_date"))
             amount = _number(row.get("amount"))
@@ -712,6 +720,8 @@ class TushareProvider:
         original_request = dict(request)
         if dataset in {"ths_index", "ths_membership"}:
             _validate_request(request, r"\d{6}\.TI", "a six-digit Tonghuashun index code ending in .TI")
+        elif dataset == "etf_index_master":
+            _validate_request(request, r"\d{6}\.[A-Z]{2,4}", "a six-digit index code with an exchange or provider suffix")
         elif dataset == "china_yield_curve":
             _validate_request(request, r"\d{3,6}\.CB", "a ChinaBond curve code ending in .CB")
         else:
@@ -893,12 +903,13 @@ class AkshareProvider:
         curve_term: Optional[float] = None
         call_segments: Optional[List[Dict[str, Any]]] = None
         provider_segment_row_counts: List[int] = []
+        adjustment_mode: Optional[str] = None
         if dataset in {"security_master", "spot_snapshot", "industry_list"}:
             call_params: Dict[str, Any] = {}
-        elif dataset == "daily_bar":
+        elif dataset in {"daily_bar", "fund_daily_bar"}:
             code = request.pop("ts_code", request.pop("symbol", ""))
             if not code:
-                raise DataProviderError("invalid_request", "daily_bar requires ts_code or symbol", self.name, spec.api_name)
+                raise DataProviderError("invalid_request", f"{dataset} requires ts_code or symbol", self.name, spec.api_name)
             normalized_code = _canonical_ts_code(code)
             trade_date = request.pop("trade_date", None)
             start_date = request.pop("start_date", trade_date or "19700101")
@@ -907,6 +918,7 @@ class AkshareProvider:
             request.pop("limit", None)
             request.pop("offset", None)
             adjust = str(request.pop("adjust", "") or "")
+            adjustment_mode = adjust or "raw"
             if require_pit and adjust:
                 raise DataProviderError(
                     "adjustment_not_pit_safe",
@@ -914,11 +926,13 @@ class AkshareProvider:
                     self.name,
                     spec.api_name,
                 )
-            timeout = request.pop("timeout", 20)
             period = request.pop("period", "daily")
+            timeout = request.pop("timeout", 20) if dataset == "daily_bar" else None
             if request:
-                raise DataProviderError("parameter_translation_unavailable", f"AKShare daily fallback cannot translate parameters: {sorted(request)}", self.name, spec.api_name)
-            call_params = {"symbol": _ak_symbol(code), "period": period, "start_date": start_date, "end_date": end_date, "adjust": adjust, "timeout": timeout}
+                raise DataProviderError("parameter_translation_unavailable", f"AKShare {dataset} fallback cannot translate parameters: {sorted(request)}", self.name, spec.api_name)
+            call_params = {"symbol": _ak_symbol(code), "period": period, "start_date": start_date, "end_date": end_date, "adjust": adjust}
+            if dataset == "daily_bar":
+                call_params["timeout"] = timeout
         elif dataset == "industry_membership":
             symbol = request.pop("symbol", request.pop("industry", ""))
             if not symbol:
@@ -1015,6 +1029,7 @@ class AkshareProvider:
             "row_count_before_pit_filter": len(rows),
             "row_count": len(filtered),
             "fallback_warning": "AKShare wraps public websites; schema and availability can change without notice.",
+            "adjustment_mode": adjustment_mode,
             "semantic_scope": (
                 "standard_maturity_tenors" if dataset == "china_yield_curve" and effective_spec.api_name == "bond_china_yield"
                 else "recent_dense_maturity_or_spot" if dataset == "china_yield_curve"

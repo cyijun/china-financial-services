@@ -1,7 +1,7 @@
 {
   "name": "china-market-researcher",
-  "version": "2.3.0",
-  "description": "Bundled A-share market research workflows for sectors, competition, peer comps, and idea generation.",
+  "version": "2.4.0",
+  "description": "Bundled A-share market research workflows for sectors, industry-ETF exposure, competition, peer comps, and idea generation.",
   "author": {
     "name": "cyijun",
     "url": "https://github.com/cyijun"
@@ -14,13 +14,14 @@
   "interface": {
     "displayName": "China Market Researcher",
     "shortDescription": "Bundled A-share sector and company research workflows.",
-    "longDescription": "Run sector overviews, competitive analysis, peer comparisons, idea generation, evidence control, and red-team review with a self-contained A-share skill bundle.",
+    "longDescription": "Run sector overviews, industry-ETF exposure audits, competitive analysis, peer comparisons, evidence control, and red-team review with a self-contained A-share skill bundle.",
     "developerName": "cyijun",
     "category": "Finance",
     "capabilities": ["Interactive", "Read", "Write"],
     "websiteURL": "https://github.com/cyijun/china-financial-services",
     "defaultPrompt": [
       "Research an A-share sector and shortlist companies",
+      "Research an industry through its ETFs and tracking indices",
       "Compare competitors and red-team the investment case"
     ]
   }

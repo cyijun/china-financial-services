@@ -4,8 +4,8 @@
     {
       "id": "china-research-methodology",
       "displayName": "China Research Methodology",
-      "version": "2.3.0",
-      "description": "Evidence-first A-share research methods, data routing, PIT controls, valuation, factor validation, and red-team review.",
+      "version": "2.4.0",
+      "description": "Evidence-first A-share research methods, data routing, PIT controls, industry-ETF penetration, valuation, factor validation, and red-team review.",
       "homepage": "https://github.com/cyijun/china-financial-services",
       "keywords": ["a-share", "research", "tushare", "akshare", "point-in-time"],
       "source": "./plugins/china-research-methodology"
@@ -13,7 +13,7 @@
     {
       "id": "financial-analysis",
       "displayName": "China Financial Analysis",
-      "version": "2.3.0",
+      "version": "2.4.0",
       "description": "A-share financial statements, modeling, valuation, workbook audit, and macro analysis.",
       "homepage": "https://github.com/cyijun/china-financial-services",
       "keywords": ["a-share", "financial-analysis", "valuation", "tushare"],
@@ -22,7 +22,7 @@
     {
       "id": "equity-research",
       "displayName": "China Equity Research",
-      "version": "2.3.0",
+      "version": "2.4.0",
       "description": "A-share earnings analysis and initiating-coverage research workflows.",
       "homepage": "https://github.com/cyijun/china-financial-services",
       "keywords": ["a-share", "equity-research", "earnings", "initiating-coverage"],
@@ -31,8 +31,8 @@
     {
       "id": "china-market-researcher",
       "displayName": "China Market Researcher",
-      "version": "2.3.0",
-      "description": "Self-contained A-share sector, competition, peer-comparison, and idea-screening workflow.",
+      "version": "2.4.0",
+      "description": "Self-contained A-share sector, industry-ETF exposure, competition, peer-comparison, and idea-screening workflow.",
       "homepage": "https://github.com/cyijun/china-financial-services",
       "keywords": ["a-share", "market-research", "sector-research", "tushare"],
       "source": "./plugins/china-market-researcher"
@@ -40,7 +40,7 @@
     {
       "id": "china-model-builder",
       "displayName": "China Model Builder",
-      "version": "2.3.0",
+      "version": "2.4.0",
       "description": "Self-contained A-share three-statement, DCF, comps, and workbook-audit workflow.",
       "homepage": "https://github.com/cyijun/china-financial-services",
       "keywords": ["a-share", "financial-modeling", "dcf", "valuation"],

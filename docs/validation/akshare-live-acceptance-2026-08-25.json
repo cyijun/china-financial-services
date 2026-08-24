@@ -1,0 +1,314 @@
+{
+  "generated_at": "2026-08-24T17:37:50.495642+00:00",
+  "repository_git_sha": "664476233c92195a92b7189de3a9d87db06dd698",
+  "sdk": {
+    "python": "3.13.11",
+    "akshare": "1.18.64"
+  },
+  "security": {
+    "credentials_required": false,
+    "returned_records_in_report": false
+  },
+  "scope": {
+    "raw_daily_ts_code": "600519.SH",
+    "raw_etf_ts_code": "510300.SH",
+    "history_start": "20250801",
+    "history_end": "20250815",
+    "curve_start": "20260817",
+    "curve_end": "20260824"
+  },
+  "overall": "needs_revision",
+  "required_failures": [
+    "raw_daily_bar_pit",
+    "raw_fund_daily_bar_pit",
+    "spot_snapshot",
+    "industry_list",
+    "industry_membership"
+  ],
+  "acceptance_claim": "all declared AKShare router interfaces attempted live",
+  "declared_dataset_coverage": [
+    {
+      "dataset": "china_yield_curve",
+      "interface": "bond_china_yield",
+      "attempted_live": true,
+      "check_statuses": [
+        "pass",
+        "pass"
+      ]
+    },
+    {
+      "dataset": "daily_bar",
+      "interface": "stock_zh_a_hist",
+      "attempted_live": true,
+      "check_statuses": [
+        "api_error"
+      ]
+    },
+    {
+      "dataset": "fund_daily_bar",
+      "interface": "fund_etf_hist_em",
+      "attempted_live": true,
+      "check_statuses": [
+        "api_error"
+      ]
+    },
+    {
+      "dataset": "industry_list",
+      "interface": "stock_board_industry_name_em",
+      "attempted_live": true,
+      "check_statuses": [
+        "api_error"
+      ]
+    },
+    {
+      "dataset": "industry_membership",
+      "interface": "stock_board_industry_cons_em",
+      "attempted_live": true,
+      "check_statuses": [
+        "blocked_by_dependency"
+      ]
+    },
+    {
+      "dataset": "security_master",
+      "interface": "stock_info_a_code_name",
+      "attempted_live": true,
+      "check_statuses": [
+        "pass"
+      ]
+    },
+    {
+      "dataset": "spot_snapshot",
+      "interface": "stock_zh_a_spot_em",
+      "attempted_live": true,
+      "check_statuses": [
+        "api_error"
+      ]
+    }
+  ],
+  "checks": [
+    {
+      "check_id": "security_master",
+      "dataset": "security_master",
+      "required": true,
+      "params": {},
+      "status": "pass",
+      "issues": [],
+      "row_count": 5550,
+      "columns": [
+        "name",
+        "symbol",
+        "ts_code"
+      ],
+      "response_sha256": "13b6afbf6554da7de8f855bb2ef2fc1d83a15d32afd9f924bfed6860de121f0c",
+      "metadata": {
+        "interface": "stock_info_a_code_name",
+        "permission_verified_live": true,
+        "pit_grade": "current_snapshot",
+        "contract_status": "full",
+        "units": {},
+        "duplicate_key_rows": 0,
+        "truncation_suspected": false,
+        "documentation_limit_drift": false
+      },
+      "started_at": "2026-08-24T17:37:31.011333+00:00",
+      "finished_at": "2026-08-24T17:37:36.756155+00:00"
+    },
+    {
+      "check_id": "raw_daily_bar_pit",
+      "dataset": "daily_bar",
+      "required": true,
+      "params": {
+        "ts_code": "600519.SH",
+        "start_date": "20250801",
+        "end_date": "20250815",
+        "adjust": "",
+        "require_quality": true
+      },
+      "status": "api_error",
+      "issues": [
+        "HTTPSConnectionPool(host='push2his.eastmoney.com', port=443): Max retries exceeded with url: /api/qt/stock/kline/get?fields1=f1%2Cf2%2Cf3%2Cf4%2Cf5%2Cf6&fields2=f51%2Cf52%2Cf53%2Cf54%2Cf55%2Cf56%2Cf57%2Cf58%2Cf59%2Cf60%2Cf61%2Cf116&ut=7eea3edcaed734bea9cbfc24409ed989&klt=101&fqt=0&secid=1.600519&beg=20250801&end=20250815 (Caused by ProxyError('Unable to connect to proxy', RemoteDisconnected('Remote end closed connection without response')))"
+      ],
+      "row_count": 0,
+      "columns": [],
+      "started_at": "2026-08-24T17:37:36.756166+00:00",
+      "finished_at": "2026-08-24T17:37:36.881688+00:00"
+    },
+    {
+      "check_id": "raw_fund_daily_bar_pit",
+      "dataset": "fund_daily_bar",
+      "required": true,
+      "params": {
+        "ts_code": "510300.SH",
+        "start_date": "20250801",
+        "end_date": "20250815",
+        "adjust": "",
+        "require_quality": true
+      },
+      "status": "api_error",
+      "issues": [
+        "HTTPSConnectionPool(host='push2his.eastmoney.com', port=443): Max retries exceeded with url: /api/qt/stock/kline/get?fields1=f1%2Cf2%2Cf3%2Cf4%2Cf5%2Cf6&fields2=f51%2Cf52%2Cf53%2Cf54%2Cf55%2Cf56%2Cf57%2Cf58%2Cf59%2Cf60%2Cf61%2Cf116&ut=7eea3edcaed734bea9cbfc24409ed989&klt=101&fqt=0&beg=20250801&end=20250815&secid=1.510300 (Caused by ProxyError('Unable to connect to proxy', RemoteDisconnected('Remote end closed connection without response')))"
+      ],
+      "row_count": 0,
+      "columns": [],
+      "started_at": "2026-08-24T17:37:36.881706+00:00",
+      "finished_at": "2026-08-24T17:37:37.022467+00:00"
+    },
+    {
+      "check_id": "spot_snapshot",
+      "dataset": "spot_snapshot",
+      "required": true,
+      "params": {},
+      "status": "api_error",
+      "issues": [
+        "HTTPSConnectionPool(host='82.push2.eastmoney.com', port=443): Max retries exceeded with url: /api/qt/clist/get?pn=1&pz=100&po=1&np=1&ut=bd1d9ddb04089700cf9c27f6f7426281&fltt=2&invt=2&fid=f12&fs=m%3A0+t%3A6%2Cm%3A0+t%3A80%2Cm%3A1+t%3A2%2Cm%3A1+t%3A23%2Cm%3A0+t%3A81+s%3A2048&fields=f1%2Cf2%2Cf3%2Cf4%2Cf5%2Cf6%2Cf7%2Cf8%2Cf9%2Cf10%2Cf12%2Cf13%2Cf14%2Cf15%2Cf16%2Cf17%2Cf18%2Cf20%2Cf21%2Cf23%2Cf24%2Cf25%2Cf22%2Cf11%2Cf62%2Cf128%2Cf136%2Cf115%2Cf152 (Caused by ProxyError('Unable to connect to proxy', RemoteDisconnected('Remote end closed connection without response')))"
+      ],
+      "row_count": 0,
+      "columns": [],
+      "started_at": "2026-08-24T17:37:37.022488+00:00",
+      "finished_at": "2026-08-24T17:37:42.292621+00:00"
+    },
+    {
+      "check_id": "industry_list",
+      "dataset": "industry_list",
+      "required": true,
+      "params": {},
+      "status": "api_error",
+      "issues": [
+        "HTTPSConnectionPool(host='17.push2.eastmoney.com', port=443): Max retries exceeded with url: /api/qt/clist/get?pn=1&pz=100&po=1&np=1&ut=bd1d9ddb04089700cf9c27f6f7426281&fltt=2&invt=2&fid=f3&fs=m%3A90+t%3A2+f%3A%2150&fields=f1%2Cf2%2Cf3%2Cf4%2Cf5%2Cf6%2Cf7%2Cf8%2Cf9%2Cf10%2Cf12%2Cf13%2Cf14%2Cf15%2Cf16%2Cf17%2Cf18%2Cf20%2Cf21%2Cf23%2Cf24%2Cf25%2Cf26%2Cf22%2Cf33%2Cf11%2Cf62%2Cf128%2Cf136%2Cf115%2Cf152%2Cf124%2Cf107%2Cf104%2Cf105%2Cf140%2Cf141%2Cf207%2Cf208%2Cf209%2Cf222 (Caused by ProxyError('Unable to connect to proxy', RemoteDisconnected('Remote end closed connection without response')))"
+      ],
+      "row_count": 0,
+      "columns": [],
+      "started_at": "2026-08-24T17:37:42.292632+00:00",
+      "finished_at": "2026-08-24T17:37:48.348643+00:00"
+    },
+    {
+      "check_id": "china_yield_curve_maturity",
+      "dataset": "china_yield_curve",
+      "required": true,
+      "params": {
+        "ts_code": "1001.CB",
+        "curve_type": "0",
+        "curve_term": 10,
+        "start_date": "20260817",
+        "end_date": "20260824",
+        "require_quality": true
+      },
+      "status": "pass",
+      "issues": [],
+      "row_count": 6,
+      "columns": [
+        "curve_name",
+        "curve_term",
+        "curve_type",
+        "trade_date",
+        "ts_code",
+        "yield",
+        "yield_type"
+      ],
+      "response_sha256": "0d03f6b43572c1381a493ff64a471514e983b2b5877ec6787feb65887230cb11",
+      "metadata": {
+        "interface": "bond_china_yield",
+        "permission_verified_live": true,
+        "pit_grade": "calendar_date",
+        "contract_status": "full",
+        "units": {
+          "curve_term": "years",
+          "yield": "percent"
+        },
+        "duplicate_key_rows": 0,
+        "truncation_suspected": false,
+        "documentation_limit_drift": false
+      },
+      "started_at": "2026-08-24T17:37:48.348651+00:00",
+      "finished_at": "2026-08-24T17:37:49.561520+00:00"
+    },
+    {
+      "check_id": "china_yield_curve_spot",
+      "dataset": "china_yield_curve",
+      "required": true,
+      "params": {
+        "ts_code": "1001.CB",
+        "curve_type": "1",
+        "curve_term": 10,
+        "start_date": "20260817",
+        "end_date": "20260824",
+        "require_quality": true
+      },
+      "status": "pass",
+      "issues": [],
+      "row_count": 1,
+      "columns": [
+        "curve_name",
+        "curve_term",
+        "curve_type",
+        "trade_date",
+        "ts_code",
+        "yield",
+        "yield_type"
+      ],
+      "response_sha256": "61e4daadb90fb7d069e94a413a4253f6527bc63c21033dd21cfc2ae63835cff9",
+      "metadata": {
+        "interface": "bond_china_close_return",
+        "permission_verified_live": true,
+        "pit_grade": "calendar_date",
+        "contract_status": "full",
+        "units": {
+          "curve_term": "years",
+          "yield": "percent"
+        },
+        "duplicate_key_rows": 0,
+        "truncation_suspected": false,
+        "documentation_limit_drift": false
+      },
+      "started_at": "2026-08-24T17:37:49.561526+00:00",
+      "finished_at": "2026-08-24T17:37:50.495597+00:00"
+    },
+    {
+      "check_id": "industry_membership",
+      "dataset": "industry_membership",
+      "required": true,
+      "params": {},
+      "status": "blocked_by_dependency",
+      "issues": [
+        "industry_list returned no usable industry name"
+      ],
+      "row_count": 0,
+      "columns": [],
+      "started_at": "2026-08-24T17:37:50.495602+00:00",
+      "finished_at": "2026-08-24T17:37:50.495604+00:00"
+    },
+    {
+      "check_id": "strict_pit_rejects_daily_bar_dynamic_adjustment",
+      "dataset": "daily_bar",
+      "required": true,
+      "params": {
+        "ts_code": "600519.SH",
+        "adjust": "qfq",
+        "require_pit": true
+      },
+      "row_count": 0,
+      "columns": [],
+      "started_at": "2026-08-24T17:37:50.495605+00:00",
+      "finished_at": "2026-08-24T17:37:50.495623+00:00",
+      "status": "pass",
+      "issues": []
+    },
+    {
+      "check_id": "strict_pit_rejects_fund_daily_bar_dynamic_adjustment",
+      "dataset": "fund_daily_bar",
+      "required": true,
+      "params": {
+        "ts_code": "510300.SH",
+        "adjust": "qfq",
+        "require_pit": true
+      },
+      "row_count": 0,
+      "columns": [],
+      "started_at": "2026-08-24T17:37:50.495624+00:00",
+      "finished_at": "2026-08-24T17:37:50.495632+00:00",
+      "status": "pass",
+      "issues": []
+    }
+  ],
+  "evidence_sha256": "a829c7cb90c63b7204a06f9a9c1b5874990ba0f7298fb78069f266eaedc6e039"
+}

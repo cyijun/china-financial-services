@@ -1,7 +1,7 @@
 {
   "name": "financial-analysis",
   "displayName": "China Financial Analysis",
-  "version": "2.3.0",
+  "version": "2.4.0",
   "description": "Core financial modeling and analysis tools powered by Tushare: A-share market data, financial statements, valuation, and macro data",
   "author": {
     "name": "cyijun",

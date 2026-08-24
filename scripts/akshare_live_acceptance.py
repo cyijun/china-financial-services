@@ -22,6 +22,7 @@ from zoneinfo import ZoneInfo
 
 
 DEFAULT_TS_CODE = "600519.SH"
+DEFAULT_ETF_TS_CODE = "510300.SH"
 HISTORY_START = "20250801"
 HISTORY_END = "20250815"
 CURVE_END_DATE = datetime.now(ZoneInfo("Asia/Shanghai")).date() - timedelta(days=1)
@@ -183,6 +184,15 @@ def run(output: Path) -> int:
             HISTORY_END,
             True,
         ),
+        (
+            "raw_fund_daily_bar_pit",
+            "fund_daily_bar",
+            {"ts_code": DEFAULT_ETF_TS_CODE, "start_date": HISTORY_START, "end_date": HISTORY_END, "adjust": "", "require_quality": True},
+            5,
+            "fund_etf_hist_em",
+            HISTORY_END,
+            True,
+        ),
         ("spot_snapshot", "spot_snapshot", {}, 1000, "stock_zh_a_spot_em", None, False),
         ("industry_list", "industry_list", {}, 10, "stock_board_industry_name_em", None, False),
         (
@@ -255,35 +265,36 @@ def run(output: Path) -> int:
             }
         )
 
-    # Policy check: dynamically rebased AKShare adjusted prices must fail
-    # closed in strict point-in-time mode before any network request is made.
-    started = _utc_now()
-    try:
-        provider.fetch(
-            "daily_bar",
-            params={"ts_code": DEFAULT_TS_CODE, "start_date": HISTORY_START, "end_date": HISTORY_END, "adjust": "qfq"},
-            as_of=HISTORY_END,
-            require_pit=True,
+    # Policy checks: dynamically rebased adjusted prices must fail closed in
+    # strict point-in-time mode before a network request is made.
+    for dataset, ts_code in (("daily_bar", DEFAULT_TS_CODE), ("fund_daily_bar", DEFAULT_ETF_TS_CODE)):
+        started = _utc_now()
+        try:
+            provider.fetch(
+                dataset,
+                params={"ts_code": ts_code, "start_date": HISTORY_START, "end_date": HISTORY_END, "adjust": "qfq"},
+                as_of=HISTORY_END,
+                require_pit=True,
+            )
+            rejection = {"status": "contract_failed", "issues": ["strict PIT unexpectedly accepted AKShare qfq"]}
+        except module.DataProviderError as error:
+            rejection = {
+                "status": "pass" if error.code == "adjustment_not_pit_safe" else "contract_failed",
+                "issues": [] if error.code == "adjustment_not_pit_safe" else [_sanitize_text(error)],
+            }
+        checks.append(
+            {
+                "check_id": f"strict_pit_rejects_{dataset}_dynamic_adjustment",
+                "dataset": dataset,
+                "required": True,
+                "params": {"ts_code": ts_code, "adjust": "qfq", "require_pit": True},
+                "row_count": 0,
+                "columns": [],
+                "started_at": started,
+                "finished_at": _utc_now(),
+                **rejection,
+            }
         )
-        rejection = {"status": "contract_failed", "issues": ["strict PIT unexpectedly accepted AKShare qfq"]}
-    except module.DataProviderError as error:
-        rejection = {
-            "status": "pass" if error.code == "adjustment_not_pit_safe" else "contract_failed",
-            "issues": [] if error.code == "adjustment_not_pit_safe" else [_sanitize_text(error)],
-        }
-    checks.append(
-        {
-            "check_id": "strict_pit_rejects_dynamic_adjustment",
-            "dataset": "daily_bar",
-            "required": True,
-            "params": {"ts_code": DEFAULT_TS_CODE, "adjust": "qfq", "require_pit": True},
-            "row_count": 0,
-            "columns": [],
-            "started_at": started,
-            "finished_at": _utc_now(),
-            **rejection,
-        }
-    )
 
     network_datasets = {item[1] for item in specs} | {"industry_membership"}
     declared_coverage = [
@@ -291,7 +302,7 @@ def run(output: Path) -> int:
             "dataset": dataset,
             "interface": spec.api_name,
             "attempted_live": dataset in network_datasets,
-            "check_statuses": [item["status"] for item in checks if item["dataset"] == dataset and item["check_id"] != "strict_pit_rejects_dynamic_adjustment"],
+            "check_statuses": [item["status"] for item in checks if item["dataset"] == dataset and not item["check_id"].startswith("strict_pit_rejects_")],
         }
         for dataset, spec in sorted(module.AKSHARE_ENDPOINTS.items())
     ]
@@ -304,7 +315,7 @@ def run(output: Path) -> int:
         "repository_git_sha": _git_sha(),
         "sdk": {"python": platform.python_version(), "akshare": getattr(ak, "__version__", "unknown")},
         "security": {"credentials_required": False, "returned_records_in_report": False},
-        "scope": {"raw_daily_ts_code": DEFAULT_TS_CODE, "history_start": HISTORY_START, "history_end": HISTORY_END, "curve_start": CURVE_START, "curve_end": CURVE_END},
+        "scope": {"raw_daily_ts_code": DEFAULT_TS_CODE, "raw_etf_ts_code": DEFAULT_ETF_TS_CODE, "history_start": HISTORY_START, "history_end": HISTORY_END, "curve_start": CURVE_START, "curve_end": CURVE_END},
         "overall": overall,
         "required_failures": required_failures,
         "acceptance_claim": "all declared AKShare router interfaces attempted live" if not unattempted else "partial declared-interface coverage",

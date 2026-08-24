@@ -5,14 +5,14 @@
     "url": "https://github.com/cyijun"
   },
   "description": "Evidence-first China A-share research and financial-modeling plugins with auditable Tushare and AKShare data routing.",
-  "version": "2.3.0",
+  "version": "2.4.0",
   "plugins": [
     {
       "name": "china-research-methodology",
       "displayName": "China Research Methodology",
       "source": "./plugins/china-research-methodology",
-      "description": "Evidence-first A-share research methods, point-in-time controls, valuation, factor validation, and red-team review.",
-      "version": "2.3.0",
+      "description": "Evidence-first A-share research methods, point-in-time controls, industry-ETF penetration, valuation, factor validation, and red-team review.",
+      "version": "2.4.0",
       "author": {
         "name": "cyijun",
         "url": "https://github.com/cyijun"
@@ -29,7 +29,7 @@
       "displayName": "China Financial Analysis",
       "source": "./plugins/financial-analysis",
       "description": "A-share financial statements, modeling, valuation, workbook audit, and macro analysis.",
-      "version": "2.3.0",
+      "version": "2.4.0",
       "author": {
         "name": "cyijun",
         "url": "https://github.com/cyijun"
@@ -46,7 +46,7 @@
       "displayName": "China Equity Research",
       "source": "./plugins/equity-research",
       "description": "A-share earnings analysis and initiating-coverage research workflows.",
-      "version": "2.3.0",
+      "version": "2.4.0",
       "author": {
         "name": "cyijun",
         "url": "https://github.com/cyijun"
@@ -62,8 +62,8 @@
       "name": "china-market-researcher",
       "displayName": "China Market Researcher",
       "source": "./plugins/china-market-researcher",
-      "description": "Self-contained A-share sector, competition, peer-comparison, and idea-screening workflow.",
-      "version": "2.3.0",
+      "description": "Self-contained A-share sector, industry-ETF exposure, competition, peer-comparison, and idea-screening workflow.",
+      "version": "2.4.0",
       "author": {
         "name": "cyijun",
         "url": "https://github.com/cyijun"
@@ -80,7 +80,7 @@
       "displayName": "China Model Builder",
       "source": "./plugins/china-model-builder",
       "description": "Self-contained A-share three-statement, DCF, comparable-company, and workbook-audit workflow.",
-      "version": "2.3.0",
+      "version": "2.4.0",
       "author": {
         "name": "cyijun",
         "url": "https://github.com/cyijun"

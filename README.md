@@ -10,14 +10,14 @@ A multi-plugin marketplace for China A-share research on Codex and Claude Code, 
 
 | Agent | Description | Output |
 |---|---|---|
-| **china-market-researcher** | Sector/theme → industry overview → competitive landscape → peer comps → ideas shortlist | Research note or slides |
+| **china-market-researcher** | Sector/theme/industry ETF → industry and index-exposure audit → competition → peer comps | Research note or slides |
 | **china-model-builder** | DCF, trading comps, 3-statement model for A-share companies | Excel workbook |
 
 | Vertical Plugin | Skills | Description |
 |---|---|---|
 | **financial-analysis** | `tushare-data`, `china-dcf-model`, `china-comps-analysis`, `3-statement-model`, `audit-xls`, `china-macro-overview` | Financial modeling, audit, and macro tools; declares its methodology dependency for Claude |
 | **equity-research** | `china-initiating-coverage` | Initiating coverage reports for China A-share |
-| **china-research-methodology** | `china-market-data` plus 8 methodology skills | Tushare/AKShare routing, PIT evidence, forensics, valuation, thesis, factor validation, and red-team review |
+| **china-research-methodology** | `china-market-data` plus 9 methodology skills | Tushare/AKShare routing, PIT evidence, industry-ETF penetration, forensics, valuation, thesis, factor validation, and red-team review |
 
 ## Repository Structure
 
@@ -129,7 +129,7 @@ The `repository-gates` GitHub Action runs offline tests, structural gates and di
 ## Data Sources
 
 - **Tushare Pro** — primary structured data; the 6000-point profile plans for VIP financial cross-sections and THS sector endpoints, with live permission checks still required
-- **AKShare** — supplemental public-web data; never a silent fallback when strict point-in-time evidence is unavailable
+- **AKShare** — supplemental public-web data, including raw ETF history; never a silent fallback when strict point-in-time evidence is unavailable
 - **Web search** — industry reports, policy interpretation, news
 - **Company announcements** — audited figures and qualitative details
 

@@ -1,7 +1,7 @@
 {
   "name": "china-research-methodology",
-  "version": "2.3.0",
-  "description": "面向A股的证据优先投研方法论，含Tushare/AKShare数据路由、财务取证、估值、论点追踪、因子验证和红队审查。",
+  "version": "2.4.0",
+  "description": "面向A股的证据优先投研方法论，含Tushare/AKShare数据路由、行业ETF穿透、财务取证、估值、因子验证和红队审查。",
   "author": {
     "name": "cyijun"
   },
@@ -12,7 +12,7 @@
   "interface": {
     "displayName": "China Research Methodology",
     "shortDescription": "A股证据链、方法论与数据质量闸门",
-    "longDescription": "Evidence-first A-share research methods with Tushare 6000-point planning, controlled AKShare fallback, point-in-time data contracts, valuation, forensics, factor validation, and red-team review.",
+    "longDescription": "Evidence-first A-share research methods with Tushare 6000-point planning, controlled AKShare fallback, point-in-time data contracts, industry-ETF penetration, valuation, forensics, factor validation, and red-team review.",
     "developerName": "cyijun",
     "websiteURL": "https://github.com/cyijun/china-financial-services"
   }

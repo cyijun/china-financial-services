@@ -1,6 +1,6 @@
 {
   "name": "china-research-methodology",
-  "version": "2.3.0",
+  "version": "2.4.0",
   "description": "Evidence-first A-share research methodology with auditable Tushare and AKShare data controls.",
   "author": {
     "name": "cyijun",
@@ -14,13 +14,14 @@
   "interface": {
     "displayName": "China Research Methodology",
     "shortDescription": "Evidence-first A-share research methods and data controls.",
-    "longDescription": "Research A-share companies with point-in-time evidence, financial forensics, valuation triangulation, thesis tracking, factor validation, and red-team review.",
+    "longDescription": "Research A-share industries and companies with point-in-time evidence, industry-ETF penetration, financial forensics, valuation triangulation, factor validation, and red-team review.",
     "developerName": "cyijun",
     "category": "Finance",
     "capabilities": ["Interactive", "Read", "Write"],
     "websiteURL": "https://github.com/cyijun/china-financial-services",
     "defaultPrompt": [
       "Build an evidence-first A-share investment thesis",
+      "Research an A-share industry through its ETFs and tracking indices",
       "Red-team an A-share research conclusion",
       "Validate an A-share factor without look-ahead bias"
     ]

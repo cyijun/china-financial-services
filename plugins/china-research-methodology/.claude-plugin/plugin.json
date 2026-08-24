@@ -1,8 +1,8 @@
 {
   "name": "china-research-methodology",
   "displayName": "China Research Methodology",
-  "version": "2.3.0",
-  "description": "Evidence-first A-share research methodology with Tushare 6000-point routing, AKShare fallback controls, financial forensics, valuation, thesis tracking, factor validation, and red-team review.",
+  "version": "2.4.0",
+  "description": "Evidence-first A-share research methodology with Tushare 6000-point routing, AKShare fallback controls, industry-ETF penetration, financial forensics, valuation, factor validation, and red-team review.",
   "author": {
     "name": "cyijun",
     "url": "https://github.com/cyijun"

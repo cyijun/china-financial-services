@@ -10,14 +10,14 @@
 
 | 智能体 | 说明 | 输出 |
 |---|---|---|
-| **china-market-researcher** | 行业/主题 → 行业概览 → 竞争格局 → 可比公司估值 → 投资点子筛选 | 研究纪要或幻灯片 |
+| **china-market-researcher** | 行业/主题/行业ETF → 行业与指数暴露审计 → 竞争格局 → 可比公司估值 | 研究纪要或幻灯片 |
 | **china-model-builder** | A 股公司 DCF、可比分析、三表预测模型 | Excel 工作簿 |
 
 | 垂直插件 | Skills | 说明 |
 |---|---|---|
 | **financial-analysis** | `tushare-data`、`china-dcf-model`、`china-comps-analysis`、`3-statement-model`、`audit-xls`、`china-macro-overview` | 核心财务建模、审计与宏观工具；Claude声明方法论依赖 |
 | **equity-research** | `china-initiating-coverage` | 中国 A 股首次覆盖报告 |
-| **china-research-methodology** | `china-market-data` + 8个方法Skill | 6000积分Tushare主源、AKShare受控降级、PIT证据链、财务取证、估值、论点、因子验证与红队 |
+| **china-research-methodology** | `china-market-data` + 9个方法Skill | 6000积分Tushare主源、AKShare受控降级、PIT证据链、行业ETF穿透、财务取证、估值、论点、因子验证与红队 |
 
 ## 仓库结构
 
@@ -129,7 +129,7 @@ GitHub Actions中的`repository-gates`负责离线测试、结构门禁和一次
 ## 数据来源
 
 - **Tushare Pro** — 主要结构化数据；6000积分用于规划VIP财务截面和同花顺板块能力，真实权限仍按接口返回验证
-- **AKShare** — 补充公开网页行情、当前列表和交叉核对；无历史可得时点时不用于严格PIT回测
+- **AKShare** — 补充公开网页行情、ETF原始日线、当前列表和交叉核对；无历史可得时点时不用于严格PIT回测
 - **网页搜索** — 行业报告、政策解读、新闻
 - **公司公告** — 经审计的数据及定性信息
 

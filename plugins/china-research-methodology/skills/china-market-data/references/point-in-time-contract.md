@@ -41,6 +41,8 @@
 - `fund_basic`严格PIT时同时提取L（上市）、D（摘牌）、I（发行）状态，按`list_date`/`delist_date`过滤；摘牌日含当日，下一日剔除。
 - `fund_daily`是ETF交易行情，按交易日16:00保守生效；`fund_nav`是公募基金净值，严格PIT按`ann_date`次日00:00保守生效。
 - `nav_date`表示净值归属日期，不证明当时已对外发布；没有`ann_date`的净值行不得进入严格PIT研究。
+- `fund_share.trade_date`是交易/变动日期，官方接口未给实际发布时间。路由允许非严格研究按观察日过滤，但`require_pit=true`必须失败；需要决策时点证明时保存交易所原页或带时间戳归档。
+- `etf_basic`与`etf_index`在本项目按当前快照处理；即使具备8000积分，当前映射和指数元数据也不能回填历史ETF暴露。
 
 ## 国债收益率曲线
 

@@ -56,6 +56,12 @@ class TushareLiveAcceptanceTests(unittest.TestCase):
         self.assertEqual(result["status"], "expected_permission_gap")
         self.assertEqual(records, [])
 
+    def test_base_specs_cover_fund_share_without_claiming_release_time(self):
+        specs = MODULE._base_specs("20260824", MODULE.datetime(2026, 8, 25, tzinfo=MODULE.SHANGHAI))
+        spec = next(item for item in specs if item.check_id == "fund_share_history")
+        self.assertEqual(spec.api_name, "fund_share")
+        self.assertIn("not a documented release timestamp", spec.contract_note)
+
 
 if __name__ == "__main__":
     unittest.main()

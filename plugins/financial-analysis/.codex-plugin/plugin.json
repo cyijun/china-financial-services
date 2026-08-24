@@ -1,6 +1,6 @@
 {
   "name": "financial-analysis",
-  "version": "2.3.0",
+  "version": "2.4.0",
   "description": "China A-share financial statements, modeling, valuation, and macro analysis with Tushare data.",
   "author": {
     "name": "cyijun",

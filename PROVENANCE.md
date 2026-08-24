@@ -1,6 +1,6 @@
 # Upstream provenance
 
-Snapshot date: 2026-08-24. This repository is an independent, modified A-share adaptation; it is not an official product of Anthropic, HKUDS, any broker, Tushare, AKShare, or the other upstream authors.
+Snapshot date: 2026-08-25. This repository is an independent, modified A-share adaptation; it is not an official product of Anthropic, HKUDS, any broker, Tushare, AKShare, or the other upstream authors.
 
 | Upstream | Pinned revision inspected | License | Local use |
 |---|---|---|---|
@@ -17,5 +17,6 @@ Snapshot date: 2026-08-24. This repository is an independent, modified A-share a
 - `a-share-financial-forensics` combines independently written A-share accounting checks with the upstream disclosure-quality lenses; it does not output fraud probabilities.
 - `a-share-factor-validation/scripts/` is a new, dependency-light local implementation. It reports diagnostics and remains `inconclusive` until caller-defined preregistered gates are evaluated; it is not a trading engine.
 - `china-market-data` and the live acceptance suite are local implementations based on official TuShare Pro and AKShare documentation, not on the four repositories above.
+- `industry-etf-research` and its deterministic snapshot scripts are new local implementations. They use public index-methodology, fund-disclosure and industry-analysis concepts without copying third-party code; source links and China-market data boundaries are embedded in the Skill references.
 
 The `sources/upstream/` working copies used for comparison are deliberately outside this Git repository and are not redistributed. See `NOTICE` and the root Apache-2.0 `LICENSE` for redistribution terms.
