@@ -1,0 +1,27 @@
+{
+  "name": "equity-research",
+  "version": "2.3.0",
+  "description": "China A-share earnings analysis and initiating-coverage workflows powered by auditable market data.",
+  "author": {
+    "name": "cyijun",
+    "url": "https://github.com/cyijun"
+  },
+  "homepage": "https://github.com/cyijun/china-financial-services",
+  "repository": "https://github.com/cyijun/china-financial-services",
+  "license": "Apache-2.0",
+  "keywords": ["a-share", "equity-research", "earnings", "initiating-coverage"],
+  "skills": "./skills/",
+  "interface": {
+    "displayName": "China Equity Research",
+    "shortDescription": "A-share earnings and initiating-coverage workflows.",
+    "longDescription": "Produce evidence-backed earnings analysis and initiating-coverage research for China A-share companies with explicit data and valuation boundaries.",
+    "developerName": "cyijun",
+    "category": "Finance",
+    "capabilities": ["Interactive", "Read", "Write"],
+    "websiteURL": "https://github.com/cyijun/china-financial-services",
+    "defaultPrompt": [
+      "Analyze this A-share company's latest earnings",
+      "Draft an initiating-coverage research outline"
+    ]
+  }
+}

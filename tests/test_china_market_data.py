@@ -4,11 +4,12 @@ import sys
 import tempfile
 import unittest
 from dataclasses import replace
+from datetime import datetime
 from pathlib import Path
 
 
 ROOT = Path(__file__).resolve().parents[1]
-MODULE_PATH = ROOT / "plugins/vertical-plugins/china-research-methodology/skills/china-market-data/scripts/china_market_data.py"
+MODULE_PATH = ROOT / "plugins/china-research-methodology/skills/china-market-data/scripts/china_market_data.py"
 SPEC = importlib.util.spec_from_file_location("china_market_data", MODULE_PATH)
 module = importlib.util.module_from_spec(SPEC)
 assert SPEC and SPEC.loader
@@ -108,6 +109,9 @@ class PermissionDeniedTushare:
     def income(self, **params):
         raise RuntimeError("积分不足，无权限")
 
+    def yc_cb(self, **params):
+        raise RuntimeError("抱歉，您没有接口(yc_cb)访问权限")
+
 
 class ProgrammingErrorTushare:
     def daily(self, **params):
@@ -118,6 +122,7 @@ class FakeAkshare:
     def __init__(self, amount=False):
         self.amount = amount
         self.calls = []
+        self.curve_calls = []
 
     def stock_zh_a_hist(self, **params):
         self.calls.append(params)
@@ -128,6 +133,24 @@ class FakeAkshare:
 
     def stock_info_a_code_name(self):
         return FakeFrame([{"code": "920001", "name": "北交样例"}])
+
+    def bond_china_yield(self, **params):
+        self.curve_calls.append(("bond_china_yield", params))
+        return FakeFrame(
+            [
+                {"曲线名称": "中债国债收益率曲线", "日期": params["start_date"], "3月": 1.1, "6月": 1.2, "1年": 1.3, "3年": 1.4, "5年": 1.5, "7年": 1.6, "10年": 1.6832, "30年": 1.9},
+                {"曲线名称": "中债中短期票据收益率曲线(AAA)", "日期": params["start_date"], "3月": 2.1, "10年": 2.8},
+            ]
+        )
+
+    def bond_china_close_return(self, **params):
+        self.curve_calls.append(("bond_china_close_return", params))
+        return FakeFrame(
+            [
+                {"日期": params["start_date"], "期限": 2.5, "到期收益率": 1.5, "即期收益率": 1.55, "远期收益率": 1.6},
+                {"日期": params["start_date"], "期限": 10.0, "到期收益率": 1.683, "即期收益率": 1.6996, "远期收益率": 1.8},
+            ]
+        )
 
 
 class FakePaginatedTushare:
@@ -274,6 +297,69 @@ class ChinaMarketDataTests(unittest.TestCase):
             )
         self.assertEqual(caught.exception.code, "adjustment_not_pit_safe")
 
+    def test_akshare_standard_yield_curve_is_filtered_and_normalized(self):
+        fake = FakeAkshare()
+        result = module.AkshareProvider(client=fake).fetch(
+            "china_yield_curve",
+            {"ts_code": "1001.CB", "curve_type": "0", "curve_term": 10, "trade_date": "20260820", "fields": "trade_date,curve_term,yield"},
+            as_of="20260820",
+            require_pit=True,
+        )
+        self.assertEqual(fake.curve_calls[0][0], "bond_china_yield")
+        self.assertEqual(fake.curve_calls[0][1], {"start_date": "20260820", "end_date": "20260820"})
+        self.assertEqual(result.records, [{"trade_date": "20260820", "ts_code": "1001.CB", "curve_name": "中债国债收益率曲线", "curve_type": "0", "yield_type": "maturity", "curve_term": 10.0, "yield": 1.6832}])
+        self.assertEqual(result.metadata["units"], {"curve_term": "years", "yield": "percent"})
+        self.assertEqual(result.metadata["semantic_scope"], "standard_maturity_tenors")
+
+    def test_akshare_recent_spot_curve_uses_dense_interface(self):
+        current = datetime.now(module.SHANGHAI).strftime("%Y%m%d")
+        fake = FakeAkshare()
+        result = module.AkshareProvider(client=fake).fetch(
+            "china_yield_curve",
+            {"ts_code": "1001.CB", "curve_type": "1", "curve_term": 10, "trade_date": current},
+            as_of=current,
+            require_pit=True,
+        )
+        self.assertEqual(fake.curve_calls[0][0], "bond_china_close_return")
+        self.assertEqual([call[1]["period"] for call in fake.curve_calls], ["0.1", "0.5", "1"])
+        self.assertEqual(result.records[0]["yield_type"], "spot")
+        self.assertEqual(result.records[0]["yield"], 1.6996)
+        self.assertEqual(result.metadata["interface"], "bond_china_close_return")
+        self.assertEqual(result.metadata["provider_segment_row_counts"], [2, 2, 2])
+
+    def test_akshare_historical_spot_curve_fails_closed(self):
+        with self.assertRaises(module.DataProviderError) as caught:
+            module.AkshareProvider(client=FakeAkshare()).fetch(
+                "china_yield_curve",
+                {"ts_code": "1001.CB", "curve_type": "1", "trade_date": "20200102"},
+            )
+        self.assertEqual(caught.exception.code, "historical_coverage_unavailable")
+
+    def test_akshare_yield_curve_requires_explicit_curve_type(self):
+        with self.assertRaises(module.DataProviderError) as caught:
+            module.AkshareProvider(client=FakeAkshare()).fetch(
+                "china_yield_curve",
+                {"ts_code": "1001.CB", "trade_date": "20260820"},
+            )
+        self.assertEqual(caught.exception.code, "semantic_ambiguity")
+
+    def test_akshare_yield_curve_rejects_conflicting_dates(self):
+        with self.assertRaises(module.DataProviderError) as caught:
+            module.AkshareProvider(client=FakeAkshare()).fetch(
+                "china_yield_curve",
+                {"ts_code": "1001.CB", "curve_type": "0", "trade_date": "20260820", "start_date": "20260819"},
+            )
+        self.assertEqual(caught.exception.code, "invalid_request")
+
+    def test_akshare_missing_requested_term_is_not_silent_empty(self):
+        current = datetime.now(module.SHANGHAI).strftime("%Y%m%d")
+        with self.assertRaises(module.DataProviderError) as caught:
+            module.AkshareProvider(client=FakeAkshare()).fetch(
+                "china_yield_curve",
+                {"ts_code": "1001.CB", "curve_type": "1", "curve_term": 9.75, "trade_date": current},
+            )
+        self.assertEqual(caught.exception.code, "requested_term_unavailable")
+
     def test_beijing_920_code_is_canonicalized(self):
         self.assertEqual(module._canonical_ts_code("920001"), "920001.BJ")
         result = module.AkshareProvider(client=FakeAkshare()).fetch("security_master")
@@ -284,6 +370,18 @@ class ChinaMarketDataTests(unittest.TestCase):
         result = auto.fetch("daily_bar", {"ts_code": "600000.SH", "start_date": "20250101", "end_date": "20250103"}, as_of="20250102", require_pit=True)
         self.assertEqual(result.metadata["provider"], "akshare")
         self.assertEqual(result.metadata["fallback_from"]["code"], "permission_denied")
+
+    def test_auto_yield_curve_fallback_keeps_semantics_and_provenance(self):
+        auto = module.AutoProvider(module.TushareProvider(client=PermissionDeniedTushare()), module.AkshareProvider(client=FakeAkshare()))
+        result = auto.fetch(
+            "china_yield_curve",
+            {"ts_code": "1001.CB", "curve_type": "0", "curve_term": 10, "trade_date": "20260820"},
+            as_of="20260820",
+            require_pit=True,
+        )
+        self.assertEqual(result.records[0]["yield"], 1.6832)
+        self.assertEqual(result.metadata["fallback_from"]["code"], "permission_denied")
+        self.assertEqual(result.metadata["route"], ["tushare", "akshare"])
 
     def test_programming_error_does_not_trigger_fallback(self):
         auto = module.AutoProvider(module.TushareProvider(client=ProgrammingErrorTushare()), module.AkshareProvider(client=FakeAkshare()))
@@ -419,6 +517,9 @@ class ChinaMarketDataTests(unittest.TestCase):
         self.assertTrue(any(row["dataset"] == "china_yield_curve" for row in payload["capabilities"]))
         curve = next(row for row in payload["capabilities"] if row["provider"] == "tushare" and row["dataset"] == "china_yield_curve")
         self.assertEqual(curve["permission_note"], "separate_grant_required")
+        ak_curve = next(row for row in payload["capabilities"] if row["provider"] == "akshare" and row["dataset"] == "china_yield_curve")
+        self.assertEqual(ak_curve["interface"], "bond_china_yield")
+        self.assertEqual(ak_curve["units"]["yield"], "percent")
         self.assertEqual(payload["aliases"]["daily"], "daily_bar")
         with tempfile.TemporaryDirectory() as directory:
             path = Path(directory) / "capabilities.json"

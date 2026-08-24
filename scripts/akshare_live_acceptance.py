@@ -15,14 +15,19 @@ import json
 import platform
 import subprocess
 import sys
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from typing import Any, Dict, Mapping, Optional, Sequence
+from zoneinfo import ZoneInfo
 
 
 DEFAULT_TS_CODE = "600519.SH"
 HISTORY_START = "20250801"
 HISTORY_END = "20250815"
+CURVE_END_DATE = datetime.now(ZoneInfo("Asia/Shanghai")).date() - timedelta(days=1)
+CURVE_START_DATE = CURVE_END_DATE - timedelta(days=7)
+CURVE_START = CURVE_START_DATE.strftime("%Y%m%d")
+CURVE_END = CURVE_END_DATE.strftime("%Y%m%d")
 
 
 def _utc_now() -> str:
@@ -59,7 +64,7 @@ def _write_report(path: Path, report: Mapping[str, Any]) -> None:
 
 
 def _load_router_module() -> Any:
-    path = Path(__file__).resolve().parents[1] / "plugins" / "vertical-plugins" / "china-research-methodology" / "skills" / "china-market-data" / "scripts" / "china_market_data.py"
+    path = Path(__file__).resolve().parents[1] / "plugins" / "china-research-methodology" / "skills" / "china-market-data" / "scripts" / "china_market_data.py"
     spec = importlib.util.spec_from_file_location("china_market_data_akshare_acceptance", path)
     if not spec or not spec.loader:
         raise RuntimeError(f"cannot load router module from {path}")
@@ -180,6 +185,24 @@ def run(output: Path) -> int:
         ),
         ("spot_snapshot", "spot_snapshot", {}, 1000, "stock_zh_a_spot_em", None, False),
         ("industry_list", "industry_list", {}, 10, "stock_board_industry_name_em", None, False),
+        (
+            "china_yield_curve_maturity",
+            "china_yield_curve",
+            {"ts_code": "1001.CB", "curve_type": "0", "curve_term": 10, "start_date": CURVE_START, "end_date": CURVE_END, "require_quality": True},
+            1,
+            "bond_china_yield",
+            CURVE_END,
+            True,
+        ),
+        (
+            "china_yield_curve_spot",
+            "china_yield_curve",
+            {"ts_code": "1001.CB", "curve_type": "1", "curve_term": 10, "start_date": CURVE_START, "end_date": CURVE_END, "require_quality": True},
+            1,
+            "bond_china_close_return",
+            CURVE_END,
+            True,
+        ),
     ]
     checks: list[Dict[str, Any]] = []
     industry_result = None
@@ -281,7 +304,7 @@ def run(output: Path) -> int:
         "repository_git_sha": _git_sha(),
         "sdk": {"python": platform.python_version(), "akshare": getattr(ak, "__version__", "unknown")},
         "security": {"credentials_required": False, "returned_records_in_report": False},
-        "scope": {"raw_daily_ts_code": DEFAULT_TS_CODE, "history_start": HISTORY_START, "history_end": HISTORY_END},
+        "scope": {"raw_daily_ts_code": DEFAULT_TS_CODE, "history_start": HISTORY_START, "history_end": HISTORY_END, "curve_start": CURVE_START, "curve_end": CURVE_END},
         "overall": overall,
         "required_failures": required_failures,
         "acceptance_claim": "all declared AKShare router interfaces attempted live" if not unattempted else "partial declared-interface coverage",

@@ -1,0 +1,15 @@
+{
+  "name": "china-research-methodology",
+  "displayName": "China Research Methodology",
+  "version": "2.3.0",
+  "description": "Evidence-first A-share research methodology with Tushare 6000-point routing, AKShare fallback controls, financial forensics, valuation, thesis tracking, factor validation, and red-team review.",
+  "author": {
+    "name": "cyijun",
+    "url": "https://github.com/cyijun"
+  },
+  "homepage": "https://github.com/cyijun/china-financial-services",
+  "repository": "https://github.com/cyijun/china-financial-services",
+  "license": "Apache-2.0",
+  "keywords": ["a-share", "research", "tushare", "akshare", "point-in-time"],
+  "skills": "./skills/"
+}

@@ -11,8 +11,8 @@ Snapshot date: 2026-08-24. This repository is an independent, modified A-share a
 
 ## Local mapping and modification status
 
-- `plugins/vertical-plugins/financial-analysis/` and `plugins/vertical-plugins/equity-research/` descend from the corresponding Anthropic workflow families. China-specific names, TuShare/AKShare integration, evidence controls and executable validation are local modifications.
-- `plugins/agent-plugins/china-market-researcher/` and `china-model-builder/` descend from Anthropic's `market-researcher` and `model-builder` plugin shapes, but are self-contained Skill bundles in this repository.
+- `plugins/financial-analysis/` and `plugins/equity-research/` descend from the corresponding Anthropic workflow families. China-specific names, Tushare/AKShare integration, evidence controls and executable validation are local modifications.
+- `plugins/china-market-researcher/` and `plugins/china-model-builder/` descend from Anthropic's `market-researcher` and `model-builder` plugin shapes, but are self-contained Skill bundles in this repository.
 - `a-share-company-underwriting` maps the cc-equity-research five-line structure to Chinese annual reports, prospectuses, exchange inquiries, administrative pricing and A-share governance evidence.
 - `a-share-financial-forensics` combines independently written A-share accounting checks with the upstream disclosure-quality lenses; it does not output fraud probabilities.
 - `a-share-factor-validation/scripts/` is a new, dependency-light local implementation. It reports diagnostics and remains `inconclusive` until caller-defined preregistered gates are evaluated; it is not a trading engine.

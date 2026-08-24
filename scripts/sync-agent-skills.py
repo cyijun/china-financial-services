@@ -1,11 +1,11 @@
 #!/usr/bin/env python3
 """
-Re-sync each agent plugin's bundled skills from the vertical-plugin source.
+Re-sync each workflow plugin's bundled skills from the source plugins.
 
-Agent plugins under plugins/agent-plugins/<slug>/skills/<name>/ are vendored
-copies of plugins/vertical-plugins/*/skills/<name>/. The vertical copy is the
-source of truth; run this after editing a skill there to propagate the change
-into every agent that bundles it.
+Shared skills in the methodology, financial-analysis and equity-research
+plugins are the source of truth. The two self-contained workflow plugins
+vendor the skills they invoke so every marketplace host can install them
+independently.
 
 Usage: python3 scripts/sync-agent-skills.py
        python3 scripts/sync-agent-skills.py --check
@@ -17,8 +17,16 @@ import re
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
-AGENTS = ROOT / "plugins" / "agent-plugins"
-VERTICALS = ROOT / "plugins" / "vertical-plugins"
+PLUGINS = ROOT / "plugins"
+SOURCE_PLUGIN_NAMES = (
+    "china-research-methodology",
+    "financial-analysis",
+    "equity-research",
+)
+BUNDLE_PLUGIN_NAMES = (
+    "china-market-researcher",
+    "china-model-builder",
+)
 CHECK = "--check" in sys.argv[1:]
 unknown = [arg for arg in sys.argv[1:] if arg != "--check"]
 if unknown:
@@ -35,12 +43,15 @@ def tree_signature(path: Path) -> dict[str, str]:
             result[str(item.relative_to(path))] = hashlib.sha256(item.read_bytes()).hexdigest()
     return result
 
-# index every skill name -> source dir in verticals
+# Index every shared skill name to its source directory.
 src_by_name: dict[str, Path] = {}
-for sk in VERTICALS.glob("*/skills/*"):
-    if sk.is_dir():
+for plugin_name in SOURCE_PLUGIN_NAMES:
+    skills_dir = PLUGINS / plugin_name / "skills"
+    for sk in skills_dir.iterdir():
+        if not sk.is_dir():
+            continue
         if sk.name in src_by_name:
-            print(f"ERROR: duplicate vertical skill name '{sk.name}': {src_by_name[sk.name]} and {sk}", file=sys.stderr)
+            print(f"ERROR: duplicate source skill name '{sk.name}': {src_by_name[sk.name]} and {sk}", file=sys.stderr)
             sys.exit(1)
         src_by_name[sk.name] = sk
 
@@ -48,9 +59,8 @@ synced = 0
 wrappers_synced = 0
 agent_specific: list[str] = []
 drifted: list[str] = []
-for agent_root in sorted(AGENTS.iterdir()):
-    if not agent_root.is_dir():
-        continue
+for plugin_name in BUNDLE_PLUGIN_NAMES:
+    agent_root = PLUGINS / plugin_name
     skills_dir = agent_root / "skills"
     existing = {path.name for path in skills_dir.iterdir() if path.is_dir()} if skills_dir.is_dir() else set()
     referenced: set[str] = set()
@@ -102,9 +112,9 @@ if CHECK:
         sys.exit(1)
     print("bundled skills and sessionStart wrappers are in sync")
 else:
-    print(f"synced {synced} bundled skill dir(s) from vertical-plugins/")
+    print(f"synced {synced} bundled skill dir(s) from source plugins")
     print(f"synced {wrappers_synced} agent sessionStart wrapper(s)")
 if agent_specific:
-    print("WARN: no vertical source found for:", file=sys.stderr)
+    print("INFO: workflow-only skills without a shared source:", file=sys.stderr)
     for m in agent_specific:
         print(f"  - {m}", file=sys.stderr)

@@ -1,8 +1,0 @@
-{
-  "name": "china-research-methodology",
-  "version": "2.2.0",
-  "description": "Evidence-first A-share research methodology with Tushare 6000-point routing, AKShare fallback controls, financial forensics, valuation, thesis tracking, factor validation, and red-team review.",
-  "author": {
-    "name": "cyijun"
-  }
-}

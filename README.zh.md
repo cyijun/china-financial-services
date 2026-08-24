@@ -2,7 +2,7 @@
 
 [English](README.md) | 中文
 
-面向中国A股市场研究、可由Codex、Claude Code和Kimi加载的Skill/插件，主数据源为[Tushare](https://tushare.pro/)，AKShare仅作受控补充。
+面向中国 A 股研究、可由 Codex 和 Claude Code 直接注册的多插件 Marketplace，并保留 Kimi Code CLI 的本地 Marketplace 兼容。主数据源为 [Tushare](https://tushare.pro/)，AKShare 仅作受控补充。
 
 > **重要声明：** 本仓库中的任何内容均不构成投资、法律、税务或会计建议。这些智能体仅起草分析师工作底稿，供合格专业人士审阅。它们不提供投资建议、不执行交易、不承担风险。所有输出均需经人工确认后方可使用。
 
@@ -22,17 +22,18 @@
 ## 仓库结构
 
 ```
+.agents/plugins/marketplace.json    # Codex Marketplace
+.claude-plugin/marketplace.json     # Claude Code Marketplace
+kimi-marketplace.json               # Kimi 本地克隆 Marketplace
 plugins/
-  agent-plugins/
-    china-market-researcher/      # 端到端工作流智能体 + 打包 skills
-    china-model-builder/
-  vertical-plugins/
-    financial-analysis/           # Skills（唯一数据源）
-    equity-research/
-    china-research-methodology/   # 证据优先的方法论与中国数据路由
+  china-research-methodology/       # 共享方法论与数据路由源
+  financial-analysis/               # 共享建模与估值源
+  equity-research/                  # 共享权益研究源
+  china-market-researcher/          # 自包含工作流 + vendored skills
+  china-model-builder/              # 自包含工作流 + vendored skills
 scripts/
   check.py                        # 校验所有清单
-  sync-agent-skills.py            # 将 vertical skills 同步到 agent 包
+  sync-agent-skills.py            # 将共享源同步到工作流包
   preflight.py                    # 检查Python、运行时与凭证就绪状态
   tushare_live_acceptance.py      # 脱敏、只读的真实接口验收
   akshare_live_acceptance.py      # AKShare全声明路由的脱敏只读验收
@@ -51,7 +52,7 @@ scripts/
 
 ### Codex（CLI / 桌面端）
 
-仓库的5个子插件均提供原生`.codex-plugin/plugin.json`，可将GitHub仓库注册为Marketplace后按需添加。以下命令已按`codex-cli 0.149.0`的本机帮助核对；本项目不会替你安装插件。
+仓库通过 `.agents/plugins/marketplace.json` 提供原生 [Codex Marketplace](https://learn.chatgpt.com/docs/build-plugins)。只需注册一次 GitHub 仓库，再按需添加插件：
 
 ```bash
 codex plugin marketplace add cyijun/china-financial-services --ref main
@@ -60,36 +61,50 @@ codex plugin add financial-analysis@china-financial-services
 codex plugin add equity-research@china-financial-services
 ```
 
-两个自包含工作流包也可单独添加：
+两个自包含工作流包可独立安装：
 
 ```bash
 codex plugin add china-market-researcher@china-financial-services
 codex plugin add china-model-builder@china-financial-services
 ```
 
-Codex会加载各插件的`skills/`。Agent插件以自包含Skill工作流运行；本仓库明确不包含远程Agent部署能力，也不包含command hooks。纵向插件请按`china-research-methodology` → `financial-analysis` → `equity-research`顺序添加。
+Codex 不消费 Claude 的插件依赖声明。任务需要同时使用方法论、财务分析和权益研究时，请按上面的顺序安装三个共享插件。本仓库明确不包含远程 Managed Agent 部署能力，也不包含 command hooks。
 
 ### Kimi Code（CLI）
 
-若不安装、只在当前会话加载，Kimi Code CLI 0.33.0提供可重复的`--skills-dir`参数：
+Kimi Code CLI 0.33.0 支持[自定义 Marketplace JSON](https://www.kimi.com/code/docs/kimi-code-cli/customization/plugins.html#custom-marketplace-json)，但其远程安装器目前不能可靠解析 monorepo 子目录中的插件（[上游问题](https://github.com/MoonshotAI/kimi-code/issues/2945)）。克隆仓库后，从仓库根目录启动 Kimi 并浏览本地目录：
 
 ```bash
-kimi --skills-dir ./plugins/vertical-plugins/china-research-methodology/skills \
-  --skills-dir ./plugins/vertical-plugins/financial-analysis/skills
-kimi --skills-dir ./plugins/agent-plugins/china-market-researcher/skills
+git clone https://github.com/cyijun/china-financial-services.git
+cd china-financial-services
+kimi
 ```
 
-Kimi交互式TUI也支持持久化的`/plugins install <path-or-url>`，并识别`.kimi-plugin/plugin.json`；本仓库不会替你执行安装。安装仓库根目录只会加载目录Skill，两个Agent插件则各自内置工作流引用的全部Skill，可独立加载。
+进入 Kimi TUI 后运行：
+
+```text
+/plugins marketplace ./kimi-marketplace.json
+```
+
+如需不安装、只在当前会话加载，可重复使用 `--skills-dir`：
+
+```bash
+kimi --skills-dir ./plugins/china-research-methodology/skills \
+  --skills-dir ./plugins/financial-analysis/skills
+kimi --skills-dir ./plugins/china-market-researcher/skills
+```
 
 ### Claude Code（CLI）
 
-自动解析本仓库内插件依赖需要Claude Code 2.1.110或更高版本；旧版本请按`china-research-methodology` → `financial-analysis` → `equity-research`顺序手动安装。
+同一个仓库通过 `.claude-plugin/marketplace.json` 提供 [Claude Code Marketplace](https://code.claude.com/docs/zh-CN/plugin-marketplaces)。Claude 会解析 `financial-analysis` 与 `equity-research` 声明的同市场依赖：
 
 ```bash
 claude plugin marketplace add cyijun/china-financial-services
+claude plugin install china-research-methodology@china-financial-services
+claude plugin install financial-analysis@china-financial-services
+claude plugin install equity-research@china-financial-services
 claude plugin install china-market-researcher@china-financial-services
 claude plugin install china-model-builder@china-financial-services
-claude plugin install china-research-methodology@china-financial-services
 ```
 
 ### Claude Cowork（桌面端 / 网页版）
@@ -102,7 +117,7 @@ claude plugin install china-research-methodology@china-financial-services
 # 校验所有内容（CI 门禁）
 python3 scripts/check.py
 
-# 修改 vertical-plugins/ 中的 skill 后，同步到 agent 包
+# 修改共享源 Skill 后，同步到工作流包
 python3 scripts/sync-agent-skills.py
 
 # 全部离线测试（无需SDK、Token或网络）

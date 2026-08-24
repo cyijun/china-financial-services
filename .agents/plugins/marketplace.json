@@ -1,0 +1,68 @@
+{
+  "name": "china-financial-services",
+  "interface": {
+    "displayName": "China Financial Services"
+  },
+  "plugins": [
+    {
+      "name": "china-research-methodology",
+      "source": {
+        "source": "local",
+        "path": "./plugins/china-research-methodology"
+      },
+      "policy": {
+        "installation": "AVAILABLE",
+        "authentication": "ON_INSTALL"
+      },
+      "category": "Finance"
+    },
+    {
+      "name": "financial-analysis",
+      "source": {
+        "source": "local",
+        "path": "./plugins/financial-analysis"
+      },
+      "policy": {
+        "installation": "AVAILABLE",
+        "authentication": "ON_INSTALL"
+      },
+      "category": "Finance"
+    },
+    {
+      "name": "equity-research",
+      "source": {
+        "source": "local",
+        "path": "./plugins/equity-research"
+      },
+      "policy": {
+        "installation": "AVAILABLE",
+        "authentication": "ON_INSTALL"
+      },
+      "category": "Finance"
+    },
+    {
+      "name": "china-market-researcher",
+      "source": {
+        "source": "local",
+        "path": "./plugins/china-market-researcher"
+      },
+      "policy": {
+        "installation": "AVAILABLE",
+        "authentication": "ON_INSTALL"
+      },
+      "category": "Finance"
+    },
+    {
+      "name": "china-model-builder",
+      "source": {
+        "source": "local",
+        "path": "./plugins/china-model-builder"
+      },
+      "policy": {
+        "installation": "AVAILABLE",
+        "authentication": "ON_INSTALL"
+      },
+      "category": "Finance"
+    }
+  ]
+}

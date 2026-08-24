@@ -1,34 +1,96 @@
 {
   "name": "china-financial-services",
   "owner": {
-    "name": "Tushare Edition"
+    "name": "cyijun",
+    "url": "https://github.com/cyijun"
   },
-  "description": "Evidence-first China A-share research and financial-modeling plugins with auditable Tushare/AKShare data routing.",
+  "description": "Evidence-first China A-share research and financial-modeling plugins with auditable Tushare and AKShare data routing.",
+  "version": "2.3.0",
   "plugins": [
     {
+      "name": "china-research-methodology",
+      "displayName": "China Research Methodology",
+      "source": "./plugins/china-research-methodology",
+      "description": "Evidence-first A-share research methods, point-in-time controls, valuation, factor validation, and red-team review.",
+      "version": "2.3.0",
+      "author": {
+        "name": "cyijun",
+        "url": "https://github.com/cyijun"
+      },
+      "homepage": "https://github.com/cyijun/china-financial-services",
+      "repository": "https://github.com/cyijun/china-financial-services",
+      "license": "Apache-2.0",
+      "category": "Finance",
+      "tags": ["a-share", "research", "tushare", "akshare", "point-in-time"],
+      "strict": true
+    },
+    {
       "name": "financial-analysis",
-      "source": "./plugins/vertical-plugins/financial-analysis",
-      "description": "Core financial modeling and analysis tools powered by Tushare: A-share market data, financial statements, valuation, and macro data"
+      "displayName": "China Financial Analysis",
+      "source": "./plugins/financial-analysis",
+      "description": "A-share financial statements, modeling, valuation, workbook audit, and macro analysis.",
+      "version": "2.3.0",
+      "author": {
+        "name": "cyijun",
+        "url": "https://github.com/cyijun"
+      },
+      "homepage": "https://github.com/cyijun/china-financial-services",
+      "repository": "https://github.com/cyijun/china-financial-services",
+      "license": "Apache-2.0",
+      "category": "Finance",
+      "tags": ["a-share", "financial-analysis", "valuation", "tushare"],
+      "strict": true
     },
     {
       "name": "equity-research",
-      "source": "./plugins/vertical-plugins/equity-research",
-      "description": "Equity research tools for China A-share market: earnings analysis, initiating coverage reports, and research workflows powered by Tushare"
-    },
-    {
-      "name": "china-research-methodology",
-      "source": "./plugins/vertical-plugins/china-research-methodology",
-      "description": "Evidence-first A-share research methodology with Tushare/AKShare routing, PIT controls, forensics, valuation, thesis tracking, factor validation, and red-team review"
+      "displayName": "China Equity Research",
+      "source": "./plugins/equity-research",
+      "description": "A-share earnings analysis and initiating-coverage research workflows.",
+      "version": "2.3.0",
+      "author": {
+        "name": "cyijun",
+        "url": "https://github.com/cyijun"
+      },
+      "homepage": "https://github.com/cyijun/china-financial-services",
+      "repository": "https://github.com/cyijun/china-financial-services",
+      "license": "Apache-2.0",
+      "category": "Finance",
+      "tags": ["a-share", "equity-research", "earnings", "initiating-coverage"],
+      "strict": true
     },
     {
       "name": "china-market-researcher",
-      "source": "./plugins/agent-plugins/china-market-researcher",
-      "description": "Sector or theme to industry overview, competitive landscape, peer comps, and ideas shortlist for China A-share market"
+      "displayName": "China Market Researcher",
+      "source": "./plugins/china-market-researcher",
+      "description": "Self-contained A-share sector, competition, peer-comparison, and idea-screening workflow.",
+      "version": "2.3.0",
+      "author": {
+        "name": "cyijun",
+        "url": "https://github.com/cyijun"
+      },
+      "homepage": "https://github.com/cyijun/china-financial-services",
+      "repository": "https://github.com/cyijun/china-financial-services",
+      "license": "Apache-2.0",
+      "category": "Finance",
+      "tags": ["a-share", "market-research", "sector-research", "tushare"],
+      "strict": true
     },
     {
       "name": "china-model-builder",
-      "source": "./plugins/agent-plugins/china-model-builder",
-      "description": "DCF, comparable companies, 3-statement models for China A-share companies"
+      "displayName": "China Model Builder",
+      "source": "./plugins/china-model-builder",
+      "description": "Self-contained A-share three-statement, DCF, comparable-company, and workbook-audit workflow.",
+      "version": "2.3.0",
+      "author": {
+        "name": "cyijun",
+        "url": "https://github.com/cyijun"
+      },
+      "homepage": "https://github.com/cyijun/china-financial-services",
+      "repository": "https://github.com/cyijun/china-financial-services",
+      "license": "Apache-2.0",
+      "category": "Finance",
+      "tags": ["a-share", "financial-modeling", "dcf", "valuation"],
+      "strict": true
     }
   ]
 }

@@ -6,7 +6,7 @@ from pathlib import Path
 
 
 ROOT = Path(__file__).resolve().parents[1]
-PATH = ROOT / "plugins/vertical-plugins/china-research-methodology/skills/a-share-research-evidence/scripts/build_evidence_manifest.py"
+PATH = ROOT / "plugins/china-research-methodology/skills/a-share-research-evidence/scripts/build_evidence_manifest.py"
 SPEC = importlib.util.spec_from_file_location("build_evidence_manifest", PATH)
 module = importlib.util.module_from_spec(SPEC)
 assert SPEC and SPEC.loader

@@ -8,7 +8,7 @@ from pathlib import Path
 
 
 ROOT = Path(__file__).resolve().parents[1]
-MODULE_PATH = ROOT / "plugins/vertical-plugins/china-research-methodology/skills/a-share-thesis-tracker/scripts/append_thesis_record.py"
+MODULE_PATH = ROOT / "plugins/china-research-methodology/skills/a-share-thesis-tracker/scripts/append_thesis_record.py"
 SPEC = importlib.util.spec_from_file_location("append_thesis_record", MODULE_PATH)
 module = importlib.util.module_from_spec(SPEC)
 assert SPEC and SPEC.loader

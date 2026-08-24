@@ -260,7 +260,7 @@ def _write_report(path: Path, report: Mapping[str, Any]) -> None:
 
 
 def _load_router_module() -> Any:
-    path = Path(__file__).resolve().parents[1] / "plugins" / "vertical-plugins" / "china-research-methodology" / "skills" / "china-market-data" / "scripts" / "china_market_data.py"
+    path = Path(__file__).resolve().parents[1] / "plugins" / "china-research-methodology" / "skills" / "china-market-data" / "scripts" / "china_market_data.py"
     spec = importlib.util.spec_from_file_location("china_market_data_live_acceptance", path)
     if not spec or not spec.loader:
         raise RuntimeError(f"cannot load router module from {path}")

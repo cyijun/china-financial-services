@@ -2,7 +2,7 @@
 
 English | [中文](README.zh.md)
 
-Portable Codex, Claude Code and Kimi skills/plugins for China A-share market research, powered by [Tushare](https://tushare.pro/) and controlled AKShare supplements.
+A multi-plugin marketplace for China A-share research on Codex and Claude Code, with local Marketplace compatibility for Kimi Code CLI. Structured data comes primarily from [Tushare](https://tushare.pro/), with controlled AKShare supplements.
 
 > **Important:** Nothing in this repository constitutes investment, legal, tax, or accounting advice. These agents draft analyst work product for review by a qualified professional. They do not make investment recommendations, execute transactions, or bind risk. Every output is staged for human sign-off.
 
@@ -22,17 +22,18 @@ Portable Codex, Claude Code and Kimi skills/plugins for China A-share market res
 ## Repository Structure
 
 ```
+.agents/plugins/marketplace.json    # Codex marketplace
+.claude-plugin/marketplace.json     # Claude Code marketplace
+kimi-marketplace.json               # Kimi local-clone marketplace
 plugins/
-  agent-plugins/
-    china-market-researcher/      # End-to-end workflow agent + bundled skills
-    china-model-builder/
-  vertical-plugins/
-    financial-analysis/           # Skills (source of truth)
-    equity-research/
-    china-research-methodology/   # Evidence-first methods and China data routing
+  china-research-methodology/       # Shared methods and data-routing source
+  financial-analysis/               # Shared modeling and valuation source
+  equity-research/                  # Shared equity-research source
+  china-market-researcher/          # Self-contained workflow + vendored skills
+  china-model-builder/              # Self-contained workflow + vendored skills
 scripts/
   check.py                        # Lint and verify all manifests
-  sync-agent-skills.py            # Sync bundled skills from vertical sources
+  sync-agent-skills.py            # Sync workflow bundles from shared sources
   preflight.py                    # Verify Python/runtime/credential readiness
   tushare_live_acceptance.py      # Sanitized, read-only live acceptance
   akshare_live_acceptance.py      # Sanitized acceptance for every declared AKShare route
@@ -51,7 +52,7 @@ Versioned sample artifacts are available in [`out/`](out/).
 
 ### Codex (CLI / desktop)
 
-All five sub-plugins include native `.codex-plugin/plugin.json` manifests. Register the GitHub repository as a marketplace and add only the packages you need. These commands were checked against the local `codex-cli 0.149.0`; this repository does not install plugins for you.
+The repository is a native [Codex Marketplace](https://learn.chatgpt.com/docs/build-plugins) through `.agents/plugins/marketplace.json`. Register it once, then add only the plugins you need:
 
 ```bash
 codex plugin marketplace add cyijun/china-financial-services --ref main
@@ -60,36 +61,50 @@ codex plugin add financial-analysis@china-financial-services
 codex plugin add equity-research@china-financial-services
 ```
 
-The two self-contained workflow bundles can also be added independently:
+The two self-contained workflow bundles can be installed independently:
 
 ```bash
 codex plugin add china-market-researcher@china-financial-services
 codex plugin add china-model-builder@china-financial-services
 ```
 
-Codex loads each plugin's `skills/` directory. Agent plugins run as self-contained skill workflows; this repository intentionally contains neither remote-agent deployment support nor command hooks. Add vertical plugins in this order: `china-research-methodology` → `financial-analysis` → `equity-research`.
+Codex does not consume Claude's plugin dependency declarations. Install the shared plugins in the displayed order when a task spans methodology, financial analysis, and equity research. This repository intentionally contains neither remote Managed Agent deployment nor command hooks.
 
 ### Kimi Code (CLI)
 
-For a no-install, session-scoped load, Kimi Code CLI 0.33.0 exposes repeatable `--skills-dir` flags:
+Kimi Code CLI 0.33.0 supports [custom Marketplace JSON](https://www.kimi.com/code/docs/en/kimi-code-cli/customization/plugins.html#custom-marketplace-json), but its current remote installer does not reliably resolve plugins stored in monorepo subdirectories ([upstream issue](https://github.com/MoonshotAI/kimi-code/issues/2945)). After cloning this repository, open Kimi from the repository root and browse the local catalog:
 
 ```bash
-kimi --skills-dir ./plugins/vertical-plugins/china-research-methodology/skills \
-  --skills-dir ./plugins/vertical-plugins/financial-analysis/skills
-kimi --skills-dir ./plugins/agent-plugins/china-market-researcher/skills
+git clone https://github.com/cyijun/china-financial-services.git
+cd china-financial-services
+kimi
 ```
 
-Kimi's interactive TUI also supports persistent `/plugins install <path-or-url>` and recognizes `.kimi-plugin/plugin.json`; this repository does not run that command for you. Installing the repository root loads only its catalog Skill, while each agent plugin vendors every Skill its workflow invokes and can be loaded independently.
+Then run inside the Kimi TUI:
+
+```text
+/plugins marketplace ./kimi-marketplace.json
+```
+
+For a no-install, session-scoped load, use repeatable `--skills-dir` flags:
+
+```bash
+kimi --skills-dir ./plugins/china-research-methodology/skills \
+  --skills-dir ./plugins/financial-analysis/skills
+kimi --skills-dir ./plugins/china-market-researcher/skills
+```
 
 ### Claude Code (CLI)
 
-Automatic dependency resolution requires Claude Code 2.1.110 or later. On older versions, install `china-research-methodology`, then `financial-analysis`, then `equity-research` manually.
+The same repository is a [Claude Code Marketplace](https://code.claude.com/docs/en/plugin-marketplaces) through `.claude-plugin/marketplace.json`. Claude resolves the declared same-marketplace dependencies for `financial-analysis` and `equity-research`:
 
 ```bash
 claude plugin marketplace add cyijun/china-financial-services
+claude plugin install china-research-methodology@china-financial-services
+claude plugin install financial-analysis@china-financial-services
+claude plugin install equity-research@china-financial-services
 claude plugin install china-market-researcher@china-financial-services
 claude plugin install china-model-builder@china-financial-services
-claude plugin install china-research-methodology@china-financial-services
 ```
 
 ### Claude Cowork (Desktop / Web)
@@ -102,7 +117,7 @@ Paste the repo URL in **Settings → Plugins → Add plugin**, or zip any direct
 # Lint everything (CI gate)
 python3 scripts/check.py
 
-# After editing a skill in vertical-plugins/, sync to agent bundles
+# After editing a shared source skill, sync the workflow bundles
 python3 scripts/sync-agent-skills.py
 
 # Offline tests (no SDK, token, or network required)

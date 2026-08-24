@@ -14,6 +14,16 @@ from typing import Any, Dict
 
 ROOT = Path(__file__).resolve().parents[1]
 PLUGINS = ROOT / "plugins"
+SOURCE_PLUGIN_NAMES = (
+    "china-research-methodology",
+    "financial-analysis",
+    "equity-research",
+)
+BUNDLE_PLUGIN_NAMES = (
+    "china-market-researcher",
+    "china-model-builder",
+)
+PLUGIN_NAMES = (*SOURCE_PLUGIN_NAMES, *BUNDLE_PLUGIN_NAMES)
 errors: list[str] = []
 checked = 0
 
@@ -93,35 +103,101 @@ def tree_signature(path: Path) -> Dict[str, str]:
     return signature
 
 
-# JSON manifests.
-marketplace = json_file(ROOT / ".claude-plugin" / "marketplace.json")
-if not marketplace.get("description"):
-    err("marketplace: missing description")
-market_names = {plugin.get("name") for plugin in marketplace.get("plugins") or []}
-for plugin in marketplace.get("plugins") or []:
-    source = (ROOT / plugin.get("source", "")).resolve()
+# Host marketplaces. All three catalogs must expose the same ordered plugin
+# inventory while retaining their host-specific schemas.
+claude_marketplace = json_file(ROOT / ".claude-plugin" / "marketplace.json")
+codex_marketplace = json_file(ROOT / ".agents" / "plugins" / "marketplace.json")
+kimi_marketplace = json_file(ROOT / "kimi-marketplace.json")
+
+if claude_marketplace.get("name") != "china-financial-services":
+    err("claude-marketplace: invalid name")
+if not claude_marketplace.get("description"):
+    err("claude-marketplace: missing description")
+if codex_marketplace.get("name") != "china-financial-services":
+    err("codex-marketplace: invalid name")
+if (codex_marketplace.get("interface") or {}).get("displayName") != "China Financial Services":
+    err("codex-marketplace: invalid interface.displayName")
+if kimi_marketplace.get("version") != "2":
+    err("kimi-marketplace: version must be '2'")
+
+claude_entries = claude_marketplace.get("plugins") or []
+codex_entries = codex_marketplace.get("plugins") or []
+kimi_entries = kimi_marketplace.get("plugins") or []
+claude_names = [entry.get("name") for entry in claude_entries]
+codex_names = [entry.get("name") for entry in codex_entries]
+kimi_names = [entry.get("id") for entry in kimi_entries]
+expected_names = list(PLUGIN_NAMES)
+for host, names in (
+    ("claude", claude_names),
+    ("codex", codex_names),
+    ("kimi", kimi_names),
+):
+    if names != expected_names:
+        err(f"{host}-marketplace: plugin order/inventory {names!r} != {expected_names!r}")
+
+for entry in claude_entries:
+    name = entry.get("name")
+    source_value = entry.get("source")
+    if not isinstance(source_value, str) or source_value != f"./plugins/{name}":
+        err(f"claude-marketplace: {name} has invalid source {source_value!r}")
+    source = (ROOT / str(source_value)).resolve()
+    if source.parent != PLUGINS.resolve() or source.name != name:
+        err(f"claude-marketplace: {name} source escapes flat plugins directory")
+        continue
     if not (source / ".claude-plugin" / "plugin.json").is_file():
-        err(f"marketplace: {plugin.get('name')} source has no Claude manifest")
-    if not (source / ".codex-plugin" / "plugin.json").is_file():
-        err(f"marketplace: {plugin.get('name')} source has no Codex manifest")
+        err(f"claude-marketplace: {name} source has no Claude manifest")
+
+for entry in codex_entries:
+    name = entry.get("name")
+    source = entry.get("source") or {}
+    if source != {"source": "local", "path": f"./plugins/{name}"}:
+        err(f"codex-marketplace: {name} has invalid local source {source!r}")
+    policy = entry.get("policy") or {}
+    if policy.get("installation") not in {"NOT_AVAILABLE", "AVAILABLE", "INSTALLED_BY_DEFAULT"}:
+        err(f"codex-marketplace: {name} has invalid installation policy")
+    if policy.get("authentication") not in {"ON_INSTALL", "ON_USE"}:
+        err(f"codex-marketplace: {name} has invalid authentication policy")
+    if not entry.get("category"):
+        err(f"codex-marketplace: {name} missing category")
+
+for entry in kimi_entries:
+    name = entry.get("id")
+    if entry.get("source") != f"./plugins/{name}":
+        err(f"kimi-marketplace: {name} has invalid local source {entry.get('source')!r}")
+    if not entry.get("displayName") or not entry.get("description"):
+        err(f"kimi-marketplace: {name} missing display metadata")
+
+actual_plugin_dirs = sorted(path.name for path in PLUGINS.iterdir() if path.is_dir())
+if actual_plugin_dirs != sorted(PLUGIN_NAMES):
+    err(f"plugins: flat directory inventory {actual_plugin_dirs!r} != {sorted(PLUGIN_NAMES)!r}")
+for plugin_name in PLUGIN_NAMES:
+    plugin_root = PLUGINS / plugin_name
+    for host_dir in (".claude-plugin", ".codex-plugin", ".kimi-plugin"):
+        if not (plugin_root / host_dir / "plugin.json").is_file():
+            err(f"plugins: {plugin_name} missing {host_dir}/plugin.json")
 
 claude_manifests: Dict[Path, Dict[str, Any]] = {}
-for path in sorted(ROOT.glob("plugins/**/.claude-plugin/plugin.json")):
+for path in sorted(ROOT.glob("plugins/*/.claude-plugin/plugin.json")):
     manifest = json_file(path)
-    claude_manifests[path.parent.parent.resolve()] = manifest
+    plugin_root = path.parent.parent.resolve()
+    claude_manifests[plugin_root] = manifest
+    if manifest.get("name") != plugin_root.name:
+        err(f"claude-manifest: {rel(path)} name differs from plugin directory")
     for dependency in manifest.get("dependencies") or []:
-        name = dependency.split("@", 1)[0] if isinstance(dependency, str) else ""
-        if name not in market_names:
+        name = dependency if isinstance(dependency, str) else dependency.get("name") if isinstance(dependency, dict) else None
+        if name not in PLUGIN_NAMES:
             err(f"claude-dependency: {rel(path)} -> {dependency} is not in marketplace")
 
 KIMI_INTERFACE_FIELDS = {"displayName", "shortDescription", "longDescription", "developerName", "websiteURL"}
 NAME_RE = re.compile(r"^[a-z0-9][a-z0-9_-]{0,63}$")
-for path in sorted([*ROOT.glob("plugins/**/.kimi-plugin/plugin.json"), ROOT / ".kimi-plugin" / "plugin.json"]):
+for path in sorted(ROOT.glob("plugins/*/.kimi-plugin/plugin.json")):
     manifest = json_file(path)
     name = manifest.get("name")
     if not isinstance(name, str) or not NAME_RE.fullmatch(name):
         err(f"kimi-manifest: {rel(path)} invalid name {name!r}")
-    plugin_root = ROOT if path.parent == ROOT / ".kimi-plugin" else path.parent.parent
+    plugin_root = path.parent.parent
+    if name != plugin_root.name:
+        err(f"kimi-manifest: {rel(path)} name differs from plugin directory")
     skills = manifest.get("skills")
     if not isinstance(skills, str) or not skills.startswith("./") or not (plugin_root / skills).resolve().is_dir():
         err(f"kimi-manifest: {rel(path)} invalid skills path {skills!r}")
@@ -134,8 +210,8 @@ for path in sorted([*ROOT.glob("plugins/**/.kimi-plugin/plugin.json"), ROOT / ".
     claude_manifest = claude_manifests.get(plugin_root.resolve())
     if claude_manifest and (manifest.get("name"), manifest.get("version")) != (claude_manifest.get("name"), claude_manifest.get("version")):
         err(f"manifest-parity: {rel(path)} name/version differs from Claude manifest")
-    if manifest.get("license") not in (None, "Apache-2.0"):
-        err(f"license: {rel(path)} must use Apache-2.0 when a license field is present")
+    if manifest.get("license") != "Apache-2.0":
+        err(f"license: {rel(path)} must declare Apache-2.0")
 
 CODEX_INTERFACE_REQUIRED = {
     "displayName",
@@ -147,7 +223,7 @@ CODEX_INTERFACE_REQUIRED = {
     "defaultPrompt",
 }
 codex_roots: set[Path] = set()
-for path in sorted(ROOT.glob("plugins/**/.codex-plugin/plugin.json")):
+for path in sorted(ROOT.glob("plugins/*/.codex-plugin/plugin.json")):
     manifest = json_file(path)
     plugin_root = path.parent.parent.resolve()
     codex_roots.add(plugin_root)
@@ -175,7 +251,7 @@ for plugin_root in claude_manifests:
 
 
 # Skill contracts and local links.
-skill_files = sorted([*PLUGINS.glob("**/skills/*/SKILL.md"), *(ROOT / "skills").glob("*/SKILL.md")])
+skill_files = sorted(PLUGINS.glob("*/skills/*/SKILL.md"))
 skill_dirs: Dict[str, list[Path]] = {}
 for path in skill_files:
     checked += 1
@@ -202,7 +278,8 @@ for path in skill_files:
 
 
 # Agent frontmatter, skill closure and exact Kimi wrapper parity.
-for path in sorted(PLUGINS.glob("agent-plugins/*/agents/*.md")):
+for plugin_name in BUNDLE_PLUGIN_NAMES:
+  for path in sorted((PLUGINS / plugin_name / "agents").glob("*.md")):
     checked += 1
     try:
         meta, body = frontmatter(path)
@@ -231,23 +308,28 @@ for path in sorted(PLUGINS.glob("agent-plugins/*/agents/*.md")):
             err(f"agent-wrapper: {rel(wrapper)}: {error}")
 
 
-# Vertical skills are sources of truth; bundled copies must match recursively.
-vertical_sources: Dict[str, Path] = {}
-for source in sorted(PLUGINS.glob("vertical-plugins/*/skills/*")):
-    if not source.is_dir():
-        continue
-    if source.name in vertical_sources:
-        err(f"vertical-skill: duplicate name {source.name}")
-    vertical_sources[source.name] = source
-for bundled in sorted(PLUGINS.glob("agent-plugins/*/skills/*")):
-    source = vertical_sources.get(bundled.name)
-    if source and tree_signature(source) != tree_signature(bundled):
-        err(f"bundled-skill: {rel(bundled)} drifted from {rel(source)}")
+# Source plugins own shared skills; bundled workflow copies must match recursively.
+shared_sources: Dict[str, Path] = {}
+for plugin_name in SOURCE_PLUGIN_NAMES:
+    for source in sorted((PLUGINS / plugin_name / "skills").iterdir()):
+        if not source.is_dir():
+            continue
+        if source.name in shared_sources:
+            err(f"source-skill: duplicate name {source.name}")
+        shared_sources[source.name] = source
+for plugin_name in BUNDLE_PLUGIN_NAMES:
+    for bundled in sorted((PLUGINS / plugin_name / "skills").iterdir()):
+        if not bundled.is_dir():
+            continue
+        source = shared_sources.get(bundled.name)
+        if source and tree_signature(source) != tree_signature(bundled):
+            err(f"bundled-skill: {rel(bundled)} drifted from {rel(source)}")
 
 # Every explicit cross-skill call in an agent bundle must close locally. Codex
 # manifests do not resolve Claude-style dependencies, so vendoring is required.
 known_skill_names = set(skill_dirs)
-for agent_root in sorted(PLUGINS.glob("agent-plugins/*")):
+for plugin_name in BUNDLE_PLUGIN_NAMES:
+    agent_root = PLUGINS / plugin_name
     if not agent_root.is_dir() or not (agent_root / "skills").is_dir():
         continue
     bundle = {item.name for item in (agent_root / "skills").iterdir() if item.is_dir()}
@@ -268,7 +350,12 @@ STALE_PATTERNS = {
     "设置止损位XX元": "trading instruction",
     "`us_tycr` 或 `shibor_lpr`": "wrong China risk-free-rate fallback",
 }
-for path in skill_files + sorted(PLUGINS.glob("agent-plugins/*/agents/*.md")):
+agent_files = [
+    path
+    for plugin_name in BUNDLE_PLUGIN_NAMES
+    for path in sorted((PLUGINS / plugin_name / "agents").glob("*.md"))
+]
+for path in skill_files + agent_files:
     text = path.read_text(encoding="utf-8")
     for pattern, reason in STALE_PATTERNS.items():
         if pattern in text:
@@ -281,6 +368,8 @@ for path in sorted(ROOT.glob("plugins/**/scripts/*.py")):
 # Removed runtime shapes must not silently re-enter this Skill-only project.
 for forbidden in (
     ROOT / "managed-agent-cookbooks",
+    ROOT / ".kimi-plugin" / "plugin.json",
+    ROOT / "skills" / "china-financial-services",
     ROOT / "scripts" / "deploy-managed-agent.sh",
     ROOT / "scripts" / "test-cookbooks.sh",
     ROOT / "scripts" / "sync-hooks.py",

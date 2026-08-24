@@ -44,7 +44,7 @@ jobs:
       - name: Claude strict manifest validation
         run: |
           claude plugin validate --strict .
-          for plugin in plugins/vertical-plugins/* plugins/agent-plugins/*; do
+          for plugin in plugins/*; do
             claude plugin validate --strict "$plugin"
           done
       - name: Codex marketplace discovery and installation smoke
@@ -64,10 +64,11 @@ jobs:
             claude plugin install "$plugin@china-financial-services" --scope local
           done
           claude plugin list --json | python scripts/assert_plugin_inventory.py "${expected[@]}"
-      - name: Kimi no-install Skill-directory parser smoke
+      - name: Kimi local-marketplace and Skill-directory parser smoke
         run: |
-          for skills in plugins/vertical-plugins/*/skills plugins/agent-plugins/*/skills; do
+          python -m json.tool kimi-marketplace.json >/dev/null
+          for skills in plugins/*/skills; do
             kimi --skills-dir "$skills" --help >/dev/null
           done
-          kimi --skills-dir plugins/vertical-plugins/china-research-methodology/skills \
-            --skills-dir plugins/vertical-plugins/financial-analysis/skills --help >/dev/null
+          kimi --skills-dir plugins/china-research-methodology/skills \
+            --skills-dir plugins/financial-analysis/skills --help >/dev/null

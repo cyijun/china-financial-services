@@ -7,7 +7,7 @@ from pathlib import Path
 
 
 ROOT = Path(__file__).resolve().parents[1]
-SKILL = ROOT / "plugins/vertical-plugins/china-research-methodology/skills/a-share-factor-validation/scripts"
+SKILL = ROOT / "plugins/china-research-methodology/skills/a-share-factor-validation/scripts"
 
 
 def load(name, filename):

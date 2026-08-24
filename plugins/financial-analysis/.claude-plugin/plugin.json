@@ -1,0 +1,16 @@
+{
+  "name": "financial-analysis",
+  "displayName": "China Financial Analysis",
+  "version": "2.3.0",
+  "description": "Core financial modeling and analysis tools powered by Tushare: A-share market data, financial statements, valuation, and macro data",
+  "author": {
+    "name": "cyijun",
+    "url": "https://github.com/cyijun"
+  },
+  "homepage": "https://github.com/cyijun/china-financial-services",
+  "repository": "https://github.com/cyijun/china-financial-services",
+  "license": "Apache-2.0",
+  "keywords": ["a-share", "financial-analysis", "valuation", "tushare"],
+  "skills": "./skills/",
+  "dependencies": ["china-research-methodology"]
+}
