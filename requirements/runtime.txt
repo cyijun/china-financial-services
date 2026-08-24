@@ -1,0 +1,6 @@
+akshare==1.18.94
+openpyxl==3.1.5
+pandas==2.2.3
+python-pptx==1.0.2
+PyYAML==6.0.3
+tushare==1.4.29

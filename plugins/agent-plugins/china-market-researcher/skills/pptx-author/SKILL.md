@@ -1,11 +1,11 @@
 ---
 name: pptx-author
-description: Produce a .pptx file on disk (headless) for Chinese A-share market research, using python-pptx with Chinese font support. For managed-agent sessions with no open Office app.
+description: Produce a .pptx file on disk for headless Chinese A-share market research, using python-pptx with Chinese font support. Use when no controllable Office session is available.
 ---
 
 # pptx-author
 
-Use this skill when running **headless** (managed-agent / CMA mode) and you need to deliver a Chinese market research PowerPoint deck as a **file artifact** rather than editing a live document via `mcp__office__powerpoint_*`.
+Use this skill when running **headless** and you need to deliver a Chinese market research PowerPoint deck as a **file artifact** rather than editing a live document through an Office integration.
 
 ## Output contract
 

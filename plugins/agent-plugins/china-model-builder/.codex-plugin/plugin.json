@@ -1,6 +1,6 @@
 {
   "name": "china-model-builder",
-  "version": "2.1.0",
+  "version": "2.2.0",
   "description": "Bundled A-share financial-modeling workflows for three statements, DCF, comps, and workbook audit.",
   "author": {
     "name": "cyijun",

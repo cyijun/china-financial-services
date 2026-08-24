@@ -24,6 +24,8 @@ description: 将A股行情、财务、估值、资金、行业与宏观查询映
 
 使用[references/数据接口.md](references/数据接口.md)中的精简清单。不要根据旧接口大全猜测名称或字段；清单外接口先查官方文档。
 
+非PIT原始导出可使用`scripts/stock_data_demo.py`和`scripts/fund_data_demo.py`：两者显式limit/offset分页、写入全部记录及响应SHA-256，分页停滞或超过最大页数会失败，不再用`head()`样例冒充完整结果。它们明确输出`pit_eligible=false`；历史研究仍必须转`china-market-data`。
+
 ## 输出
 
 区分`documented`、`live_call_succeeded`、`permission_denied`、`empty`和`partial`。未运行的接口不能标成可用，离线样例不能标成真实权限验证。

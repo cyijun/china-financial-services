@@ -1,0 +1,21 @@
+China Financial Services
+Copyright 2026 cyijun and contributors
+
+This product includes modified material derived from the plugin and Skill
+workflows in Anthropic's Financial Services repository:
+https://github.com/anthropics/financial-services
+Inspected revision: 33a3d8a9d6e5c3d4861731933a8857cc5e03315d
+Licensed under the Apache License, Version 2.0.
+
+This product also attributes methodology adapted from:
+
+- prof-little-bear/cc-equity-research, revision
+  7c428944a6718c35461f839c618ae66334b6371b, Apache-2.0.
+- HKUDS/Vibe-Trading, revision
+  99e84abaad965f75dd15cab2fcb0f3f61d30577b, MIT.
+- wshobson/agents, revision
+  d82998e7df393c671ede2387a8435075f0b633f5, MIT.
+
+All upstream material has been modified, translated, selectively adapted, or
+used only as implementation inspiration. Exact file-family mappings and scope
+limits are recorded in PROVENANCE.md. No upstream project endorses this work.

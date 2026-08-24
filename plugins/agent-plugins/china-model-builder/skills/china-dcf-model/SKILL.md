@@ -29,6 +29,12 @@ description: 为A股非金融企业构建可审计的FCFF或FCFE估值模型，�
 7. 输出WACC×永续增长、关键经营驱动和价值桥敏感性；中心格必须等于基础情景。
 8. 调用`a-share-valuation-triangulation`并列其他方法和反向隐含预期。
 
+## 可执行计算
+
+用`scripts/dcf_model.py config.json --output dcf-report.json`生成可复核FCFF计算。配置必须包含`valuation_date`、非空`sources`、`revenue_base`、逐年`forecast_years`、`capital`、`terminal_growth`、`bridge`和`sensitivity`；脚本不提供行业默认增长率、Beta、ERP或终值假设。它会计算CAPM股权成本、税后债务成本、市场价值权重WACC、逐年NOPAT/D&A/Capex/营运资本变化、终值、价值桥和敏感性中心格检查。
+
+该脚本输出JSON计算底稿，不替代工作簿样式、公式重算引擎或原始数据验证；如果再由`xlsx-author`落入工作簿，仍需`audit-xls`验收。
+
 ## 工作簿契约
 
 - 至少包含`Sources`、`Inputs`、`Historicals`、`Forecast`、`DCF`、`Sensitivity`、`Checks`。

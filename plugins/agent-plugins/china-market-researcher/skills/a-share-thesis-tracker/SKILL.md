@@ -21,7 +21,7 @@ description: 为A股研究对象建立和更新可证伪的研究论点，记录
 6. 每条新证据记录发生时间、市场可得时间、来源、影响支柱和状态变化。结构化数据必须保留`china-market-data`元信息。
 7. 支柱状态使用`supported`、`mixed`、`weakened`、`broken`或`unknown`，不给综合健康分。
 8. 输出变化、最强反方、下一检查时间和待补证据。
-9. 需要本地持久化时使用`scripts/append_thesis_record.py`追加JSONL哈希链；它提供篡改可检测性，不等同于WORM存储、签名或多人权限控制。
+9. 需要本地持久化时使用`scripts/append_thesis_record.py`追加JSONL哈希链；脚本强制最小schema，并在同一排他文件锁内完成旧链校验与追加，避免并发写产生分叉。它提供篡改可检测性，不等同于WORM存储、签名或多人权限控制。
 
 ## 硬约束
 

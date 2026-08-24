@@ -18,6 +18,8 @@ description: 对A股上市公司进行商业模式、行业结构、竞争优势
 7. 构造基础、压力和乐观运营情景，列驱动、可观察触发器和范围，不赋主观概率。
 8. 使用`china-market-data`获取财务、估值、行业成员和行情；定性结论仍需公告、年报和产业证据。
 
+五行拆解结构改写自`prof-little-bear/cc-equity-research`的`community-skills/analyze/business-model.md`（检视commit `7c428944a6718c35461f839c618ae66334b6371b`，Apache-2.0）；本版本将证据基准替换为中国年报、招股书、问询函及交易所材料。归属不代表上游对本项目背书。
+
 ## 硬约束
 
 - 不用份额、品牌或管理层声誉单独证明护城河。

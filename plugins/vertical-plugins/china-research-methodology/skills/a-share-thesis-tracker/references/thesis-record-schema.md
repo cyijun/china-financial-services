@@ -25,4 +25,4 @@
 
 原始论点、旧估值和旧失效条件不可静默覆盖。新版本说明修改是由新事实、口径修订还是分析错误触发。
 
-本地JSONL使用`record`、`recorded_at`、`previous_hash`和`record_hash`。哈希链只能检测静默改写；若需要不可抵赖或权限隔离，仍需外部对象锁、签名或版本库保护。
+本地JSONL使用`record`、`recorded_at`、`previous_hash`和`record_hash`。`record`最少需要正整数`version`、带时区`as_of`、`core_thesis`、数组`pillars`、数组`counterevidence`及状态；状态只允许`supported`、`mixed`、`weakened`、`broken`或`unknown`。脚本在排他锁内校验整条旧链并追加，已含并发测试。哈希链只能检测静默改写；若需要不可抵赖或权限隔离，仍需外部对象锁、签名或版本库保护。

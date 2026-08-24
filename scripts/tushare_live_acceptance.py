@@ -9,10 +9,12 @@ contain returned records or credentials.
 from __future__ import annotations
 
 import argparse
+import hashlib
 import importlib.util
 import json
 import os
 import platform
+import subprocess
 import sys
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta, timezone
@@ -26,6 +28,9 @@ FINANCIAL_PERIOD = "20241231"
 ST_HISTORY_DATE = "20250813"
 YIELD_CURVE_DATE = "20200203"
 DEFAULT_TS_CODE = "600519.SH"
+DEFAULT_FUND_TS_CODE = "510300.SH"
+INDEX_WEIGHT_MONTH_START = "20250101"
+INDEX_WEIGHT_MONTH_END = "20250131"
 
 
 @dataclass(frozen=True)
@@ -65,6 +70,24 @@ def _redact(value: Any) -> Any:
     if isinstance(value, (list, tuple)):
         return [_redact(item) for item in value]
     return value
+
+
+def _stable_sha256(value: Any) -> str:
+    encoded = json.dumps(value, ensure_ascii=False, sort_keys=True, separators=(",", ":"), default=str).encode("utf-8")
+    return hashlib.sha256(encoded).hexdigest()
+
+
+def _git_sha() -> Optional[str]:
+    try:
+        return subprocess.run(
+            ["git", "rev-parse", "HEAD"],
+            cwd=Path(__file__).resolve().parents[1],
+            check=True,
+            capture_output=True,
+            text=True,
+        ).stdout.strip()
+    except (FileNotFoundError, subprocess.CalledProcessError):
+        return None
 
 
 def _classify_error(message: str) -> str:
@@ -152,6 +175,7 @@ def _run_check(client: Any, spec: CheckSpec, token: str) -> Tuple[Dict[str, Any]
                 "columns": columns,
                 "issues": issues,
                 "metrics": metrics,
+                "response_sha256": _stable_sha256(records),
             }
         )
         return base, records
@@ -165,9 +189,11 @@ def _run_check(client: Any, spec: CheckSpec, token: str) -> Tuple[Dict[str, Any]
         base["finished_at"] = _utc_now()
 
 
-def _base_specs(latest_open_date: str) -> List[CheckSpec]:
-    financial_fields = "ts_code,ann_date,f_ann_date,end_date,report_type,update_flag"
+def _base_specs(latest_open_date: str, now: datetime) -> List[CheckSpec]:
+    financial_fields = "ts_code,ann_date,f_ann_date,end_date,report_type,comp_type,update_flag"
+    recent_start = (now.date() - timedelta(days=45)).strftime("%Y%m%d")
     return [
+        CheckSpec("stock_basic_active", "stock_basic", {"exchange": "", "list_status": "L", "fields": "ts_code,symbol,market,exchange,list_date,delist_date"}, ("ts_code", "symbol", "market", "exchange", "list_date", "delist_date"), min_rows=100, distinct_column="ts_code", min_distinct=100, documented_row_limit=6000),
         CheckSpec(
             "daily_single_security",
             "daily",
@@ -176,6 +202,11 @@ def _base_specs(latest_open_date: str) -> List[CheckSpec]:
             expected_values={"ts_code": DEFAULT_TS_CODE, "trade_date": latest_open_date},
             contract_note="Unadjusted A-share daily bar; vol is lots and amount is thousand CNY.",
         ),
+        CheckSpec("adjustment_factor", "adj_factor", {"ts_code": DEFAULT_TS_CODE, "trade_date": latest_open_date, "fields": "ts_code,trade_date,adj_factor"}, ("ts_code", "trade_date", "adj_factor"), expected_values={"ts_code": DEFAULT_TS_CODE, "trade_date": latest_open_date}, documented_row_limit=6000),
+        CheckSpec("daily_basic", "daily_basic", {"ts_code": DEFAULT_TS_CODE, "trade_date": latest_open_date, "fields": "ts_code,trade_date,close,turnover_rate,pe,pb,total_mv,circ_mv"}, ("ts_code", "trade_date", "close", "turnover_rate", "pe", "pb", "total_mv", "circ_mv"), expected_values={"ts_code": DEFAULT_TS_CODE, "trade_date": latest_open_date}, documented_row_limit=6000),
+        CheckSpec("fund_basic_active", "fund_basic", {"market": "E", "status": "L", "fields": "ts_code,market,status,found_date,list_date,delist_date"}, ("ts_code", "market", "status", "list_date", "delist_date"), min_rows=100, distinct_column="ts_code", min_distinct=100, expected_values={"market": "E", "status": "L"}, documented_row_limit=15000),
+        CheckSpec("fund_daily_single_security", "fund_daily", {"ts_code": DEFAULT_FUND_TS_CODE, "trade_date": latest_open_date, "fields": "ts_code,trade_date,open,high,low,close,vol,amount"}, ("ts_code", "trade_date", "open", "high", "low", "close", "vol", "amount"), expected_values={"ts_code": DEFAULT_FUND_TS_CODE, "trade_date": latest_open_date}, documented_row_limit=5000, contract_note="ETF daily bar; vol is lots and amount is thousand CNY."),
+        CheckSpec("fund_nav_history", "fund_nav", {"ts_code": DEFAULT_FUND_TS_CODE, "start_date": recent_start, "end_date": latest_open_date, "fields": "ts_code,ann_date,nav_date,unit_nav,accum_nav,adj_nav"}, ("ts_code", "ann_date", "nav_date", "unit_nav", "accum_nav", "adj_nav"), expected_values={"ts_code": DEFAULT_FUND_TS_CODE}, require_any_nonempty=("ann_date", "nav_date", "unit_nav")),
         CheckSpec("income_single_security", "income", {"ts_code": DEFAULT_TS_CODE, "period": FINANCIAL_PERIOD, "fields": financial_fields + ",revenue,n_income_attr_p"}, ("ts_code", "ann_date", "f_ann_date", "end_date", "revenue", "n_income_attr_p"), expected_values={"ts_code": DEFAULT_TS_CODE, "end_date": FINANCIAL_PERIOD}),
         CheckSpec("balance_sheet_single_security", "balancesheet", {"ts_code": DEFAULT_TS_CODE, "period": FINANCIAL_PERIOD, "fields": financial_fields + ",total_assets,total_liab"}, ("ts_code", "ann_date", "f_ann_date", "end_date", "total_assets", "total_liab"), expected_values={"ts_code": DEFAULT_TS_CODE, "end_date": FINANCIAL_PERIOD}),
         CheckSpec("cash_flow_single_security", "cashflow", {"ts_code": DEFAULT_TS_CODE, "period": FINANCIAL_PERIOD, "fields": financial_fields + ",n_cashflow_act"}, ("ts_code", "ann_date", "f_ann_date", "end_date", "n_cashflow_act"), expected_values={"ts_code": DEFAULT_TS_CODE, "end_date": FINANCIAL_PERIOD}),
@@ -184,9 +215,21 @@ def _base_specs(latest_open_date: str) -> List[CheckSpec]:
         CheckSpec("balance_sheet_vip_cross_section", "balancesheet_vip", {"period": FINANCIAL_PERIOD, "fields": financial_fields + ",total_assets,total_liab"}, ("ts_code", "ann_date", "f_ann_date", "end_date", "total_assets", "total_liab"), min_rows=100, distinct_column="ts_code", min_distinct=100, expected_values={"end_date": FINANCIAL_PERIOD}),
         CheckSpec("cash_flow_vip_cross_section", "cashflow_vip", {"period": FINANCIAL_PERIOD, "fields": financial_fields + ",n_cashflow_act"}, ("ts_code", "ann_date", "f_ann_date", "end_date", "n_cashflow_act"), min_rows=100, distinct_column="ts_code", min_distinct=100, expected_values={"end_date": FINANCIAL_PERIOD}),
         CheckSpec("financial_indicator_vip_cross_section", "fina_indicator_vip", {"period": FINANCIAL_PERIOD, "fields": "ts_code,ann_date,end_date,roe,roe_waa,grossprofit_margin,debt_to_assets,update_flag"}, ("ts_code", "ann_date", "end_date", "roe", "debt_to_assets"), min_rows=100, distinct_column="ts_code", min_distinct=100, expected_values={"end_date": FINANCIAL_PERIOD}),
+        CheckSpec("forecast_single_announcement_date", "forecast", {"ann_date": "20190131", "fields": "ts_code,ann_date,end_date,type,p_change_min,p_change_max,net_profit_min,net_profit_max"}, ("ts_code", "ann_date", "end_date", "type"), min_rows=1, distinct_column="ts_code", min_distinct=1, expected_values={"ann_date": "20190131"}, documented_row_limit=3500, contract_note="Base forecast requires ts_code or ann_date; period-only cross sections belong to forecast_vip."),
+        CheckSpec("forecast_vip_cross_section", "forecast_vip", {"period": FINANCIAL_PERIOD, "fields": "ts_code,ann_date,end_date,type,p_change_min,p_change_max,net_profit_min,net_profit_max"}, ("ts_code", "ann_date", "end_date", "type"), min_rows=1, distinct_column="ts_code", min_distinct=1, expected_values={"end_date": FINANCIAL_PERIOD}, documented_row_limit=3500),
+        CheckSpec("express_cross_section", "express", {"period": FINANCIAL_PERIOD, "fields": "ts_code,ann_date,end_date,revenue,operate_profit,total_profit,n_income,total_assets,total_hldr_eqy_exc_min_int"}, ("ts_code", "ann_date", "end_date", "revenue", "n_income"), min_rows=1, distinct_column="ts_code", min_distinct=1, expected_values={"end_date": FINANCIAL_PERIOD}),
+        CheckSpec("express_vip_cross_section", "express_vip", {"period": FINANCIAL_PERIOD, "fields": "ts_code,ann_date,end_date,revenue,operate_profit,total_profit,n_income,total_assets,total_hldr_eqy_exc_min_int"}, ("ts_code", "ann_date", "end_date", "revenue", "n_income"), min_rows=1, distinct_column="ts_code", min_distinct=1, expected_values={"end_date": FINANCIAL_PERIOD}),
+        CheckSpec("disclosure_schedule", "disclosure_date", {"end_date": FINANCIAL_PERIOD, "fields": "ts_code,ann_date,end_date,pre_date,actual_date,modify_date"}, ("ts_code", "end_date", "pre_date"), min_rows=1, expected_values={"end_date": FINANCIAL_PERIOD}, documented_row_limit=3000),
+        CheckSpec("money_flow", "moneyflow", {"trade_date": latest_open_date, "fields": "ts_code,trade_date,buy_sm_vol,sell_sm_vol,buy_lg_vol,sell_lg_vol,net_mf_vol"}, ("ts_code", "trade_date", "buy_sm_vol", "sell_sm_vol", "net_mf_vol"), min_rows=100, expected_values={"trade_date": latest_open_date}, documented_row_limit=6000),
+        CheckSpec("suspend_status", "suspend_d", {"trade_date": latest_open_date, "fields": "ts_code,trade_date,suspend_timing,suspend_type"}, ("ts_code", "trade_date", "suspend_type"), min_rows=0, documented_row_limit=5000, contract_note="An empty response is valid when no listed security is suspended on the selected date."),
+        CheckSpec("price_limit", "stk_limit", {"trade_date": latest_open_date, "fields": "ts_code,trade_date,pre_close,up_limit,down_limit"}, ("ts_code", "trade_date", "pre_close", "up_limit", "down_limit"), min_rows=100, expected_values={"trade_date": latest_open_date}, documented_row_limit=5800),
+        CheckSpec("industry_classification", "index_classify", {"level": "L1", "src": "SW2021", "fields": "index_code,industry_name,level,industry_code,is_pub,src"}, ("index_code", "industry_name", "level", "src"), min_rows=1, expected_values={"level": "L1", "src": "SW2021"}, documented_row_limit=10000),
         CheckSpec("historical_industry_membership", "index_member_all", {"is_new": "N", "fields": "l1_code,l1_name,l2_code,l2_name,l3_code,l3_name,ts_code,name,in_date,out_date,is_new"}, ("l1_code", "l2_code", "l3_code", "ts_code", "in_date", "out_date", "is_new"), min_rows=1, expected_values={"is_new": "N"}, require_any_nonempty=("in_date", "out_date"), documented_row_limit=2000, contract_note="Historical rows are interval evidence; a result at the row limit is not a complete all-market extract."),
+        CheckSpec("index_weight_history", "index_weight", {"index_code": "000300.SH", "start_date": INDEX_WEIGHT_MONTH_START, "end_date": INDEX_WEIGHT_MONTH_END, "fields": "index_code,con_code,trade_date,weight"}, ("index_code", "con_code", "trade_date", "weight"), min_rows=100, distinct_column="con_code", min_distinct=100, expected_values={"index_code": "000300.SH"}),
         CheckSpec("historical_st_status", "stock_st", {"trade_date": ST_HISTORY_DATE, "fields": "ts_code,name,trade_date,type,type_name"}, ("ts_code", "name", "trade_date", "type", "type_name"), expected_values={"trade_date": ST_HISTORY_DATE}, documented_row_limit=1000),
         CheckSpec("ths_index_catalog", "ths_index", {"exchange": "A", "type": "I", "fields": "ts_code,name,count,exchange,list_date,type"}, ("ts_code", "name", "exchange", "type"), min_rows=1, distinct_column="ts_code", min_distinct=1, expected_values={"exchange": "A", "type": "I"}, documented_row_limit=5000, contract_note="Current catalog only; not point-in-time history."),
+        CheckSpec("shibor_history", "shibor", {"start_date": recent_start, "end_date": latest_open_date, "fields": "date,on,1w,2w,1m,3m,6m,9m,1y"}, ("date", "on", "1w", "1m", "3m", "1y"), min_rows=1, documented_row_limit=2000),
+        CheckSpec("lpr_history", "shibor_lpr", {"start_date": "20250101", "end_date": latest_open_date, "fields": "date,1y,5y"}, ("date", "1y", "5y"), min_rows=1, documented_row_limit=2000),
         CheckSpec("china_yield_curve", "yc_cb", {"ts_code": "1001.CB", "curve_type": "0", "trade_date": YIELD_CURVE_DATE, "fields": "trade_date,ts_code,curve_name,curve_type,curve_term,yield"}, ("trade_date", "ts_code", "curve_type", "curve_term", "yield"), required=False, expected_values={"trade_date": YIELD_CURVE_DATE, "curve_type": "0"}, documented_row_limit=2000, contract_note="Official docs classify yc_cb as a separately granted permission, independent of points."),
     ]
 
@@ -230,6 +273,7 @@ def _load_router_module() -> Any:
 def _run_router_checks(token: str, latest_open: str, ths_code: str) -> List[Dict[str, Any]]:
     cases = [
         ("router_daily_pit", "daily_bar", {"ts_code": DEFAULT_TS_CODE, "trade_date": latest_open}, f"{latest_open[:4]}-{latest_open[4:6]}-{latest_open[6:]}T16:30:00+08:00", True, "daily", 1),
+        ("router_fund_daily_pit", "fund_daily_bar", {"ts_code": DEFAULT_FUND_TS_CODE, "trade_date": latest_open}, f"{latest_open[:4]}-{latest_open[4:6]}-{latest_open[6:]}T16:30:00+08:00", True, "fund_daily", 1),
         ("router_income_vip_pit", "income", {"period": FINANCIAL_PERIOD, "universe_mode": "cross_section", "fields": "ts_code,ann_date,f_ann_date,end_date,revenue,n_income_attr_p,update_flag"}, "2026-08-24T23:59:59+08:00", True, "income_vip", 100),
         ("router_historical_membership_pit", "industry_membership", {"ts_code": DEFAULT_TS_CODE}, "2020-01-02T23:59:59+08:00", True, "index_member_all", 1),
         ("router_ths_membership_snapshot", "ths_membership", {"ts_code": ths_code}, None, False, "ths_member", 1),
@@ -269,6 +313,7 @@ def _run_router_checks(token: str, latest_open: str, ths_code: str) -> List[Dict
                     "status": "pass" if not issues else "contract_failed",
                     "issues": issues,
                     "row_count": len(result.records),
+                    "response_sha256": _stable_sha256(result.records),
                     "metadata": {
                         "interface": metadata.get("interface"),
                         "permission_verified_live": metadata.get("permission_verified_live"),
@@ -312,7 +357,8 @@ def run(output: Path, strict_optional: bool = False) -> int:
     latest_open = _latest_open_date(calendar_records) or ST_HISTORY_DATE
 
     ths_index_records: List[Dict[str, Any]] = []
-    for spec in _base_specs(latest_open):
+    base_specs = _base_specs(latest_open, now)
+    for spec in base_specs:
         result, records = _run_check(client, spec, token)
         results.append(result)
         if spec.check_id == "ths_index_catalog":
@@ -336,8 +382,28 @@ def run(output: Path, strict_optional: bool = False) -> int:
 
     router_checks = _run_router_checks(token, latest_open, ths_code)
 
+    module = _load_router_module()
+    attempted_interfaces = {item.get("api_name") for item in results}
+    declared_coverage = []
+    for dataset, spec in sorted(module.TUSHARE_ENDPOINTS.items()):
+        interfaces = [("base", spec.api_name)]
+        if spec.vip_api_name:
+            interfaces.append(("vip", spec.vip_api_name))
+        for route, interface in interfaces:
+            declared_coverage.append(
+                {
+                    "dataset": dataset,
+                    "route": route,
+                    "interface": interface,
+                    "attempted_live": interface in attempted_interfaces,
+                    "check_statuses": [item.get("status") for item in results if item.get("api_name") == interface],
+                }
+            )
+    unattempted_declared = [f"{item['dataset']}:{item['route']}" for item in declared_coverage if not item["attempted_live"]]
+
     required_failures = [item["check_id"] for item in results if item["required"] and item["status"] != "pass"]
     required_failures.extend(f"router:{item['check_id']}" for item in router_checks if item["required"] and item["status"] != "pass")
+    required_failures.extend(f"unattempted:{dataset}" for dataset in unattempted_declared)
     optional_gaps = [item["check_id"] for item in results if not item["required"] and item["status"] != "pass"]
     overall = "ready" if not required_failures and not optional_gaps else "ready_with_optional_caveats" if not required_failures else "needs_revision"
     if strict_optional and optional_gaps:
@@ -345,6 +411,7 @@ def run(output: Path, strict_optional: bool = False) -> int:
 
     report = {
         "generated_at": _utc_now(),
+        "repository_git_sha": _git_sha(),
         "as_of_timezone": "Asia/Shanghai",
         "as_of_local": now.isoformat(),
         "sdk": {"python": platform.python_version(), "tushare": getattr(ts, "__version__", "unknown")},
@@ -359,9 +426,13 @@ def run(output: Path, strict_optional: bool = False) -> int:
         "overall": overall,
         "required_failures": required_failures,
         "optional_gaps": optional_gaps,
+        "acceptance_claim": "all declared Tushare router interfaces attempted live" if not unattempted_declared else "partial declared-interface coverage",
+        "declared_dataset_coverage": declared_coverage,
+        "unattempted_declared_datasets": unattempted_declared,
         "checks": results,
         "router_checks": router_checks,
     }
+    report["evidence_sha256"] = _stable_sha256({"checks": results, "router_checks": router_checks, "declared_dataset_coverage": declared_coverage})
     _write_report(output, report)
     all_checks = results + router_checks
     passed = sum(1 for item in all_checks if item["status"] == "pass")

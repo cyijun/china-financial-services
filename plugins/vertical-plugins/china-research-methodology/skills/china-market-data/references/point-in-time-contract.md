@@ -16,7 +16,9 @@
 | `future_rows_dropped` | 因晚于as_of被剔除的行数 |
 | `fallback_from` | 主源失败和降级原因 |
 | `units` / `primary_key` | 规范单位和主键 |
-| `status` / `truncation_suspected` | full、empty或partial，以及是否撞到行数上限 |
+| `status` / `truncation_suspected` | full、empty、quality_warning或partial，以及是否撞到行数上限 |
+| `pagination_complete` / `request_segment_row_counts` | 是否由短页证明分页完成及各页/分段行数 |
+| `response_sha256` | 规范化响应记录哈希，用于验收与快照绑定 |
 
 ## 财务数据
 
@@ -32,6 +34,13 @@
 - 原始OHLCV和复权因子分别保存。
 - 路由器把当日日线可得时点保守设为上海时区16:00；用收盘形成的信号最早假设下一可成交时点。
 - 前复权序列可能随未来分红送转变化。历史策略使用当时可得因子或明确定义的总回报构造。
+- `adjust`派生器只接受原始行情和复权因子，锚点限定在`as_of`以内；缺因子时失败，不以今日动态qfq/hfq结果补齐。
+
+## 基金
+
+- `fund_basic`严格PIT时同时提取L（上市）、D（摘牌）、I（发行）状态，按`list_date`/`delist_date`过滤；摘牌日含当日，下一日剔除。
+- `fund_daily`是ETF交易行情，按交易日16:00保守生效；`fund_nav`是公募基金净值，严格PIT按`ann_date`次日00:00保守生效。
+- `nav_date`表示净值归属日期，不证明当时已对外发布；没有`ann_date`的净值行不得进入严格PIT研究。
 
 ## 股票池与成交
 

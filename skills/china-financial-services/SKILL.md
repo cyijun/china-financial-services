@@ -5,7 +5,7 @@ description: 中国A股金融服务仓库的目录入口。介绍5个可独立�
 
 # China Financial Services
 
-本Skill只是仓库目录和安装指南。Kimi根插件不会递归加载下面5个子插件，也不能直接路由它们；需要使用哪一项，就安装对应子插件及其依赖。
+本Skill只是仓库目录和加载指南。根目录不会递归加载下面5个子插件，也不能直接路由它们；需要使用哪一项，就把对应的`skills/`目录交给当前宿主。
 
 | 插件 | 类型 | 说明 |
 |---|---|---|
@@ -26,19 +26,19 @@ description: 中国A股金融服务仓库的目录入口。介绍5个可独立�
 
 安装后的对应子插件会根据任务触发自己的Skill；根入口不承担此路由。
 
-## 安装独立插件
+## Kimi CLI加载独立Skill集合
 
-如果你只想安装某个子插件，可在 Kimi Code 中使用本地路径：
+Kimi Code CLI 0.33.0使用`--skills-dir`，一次指向一个Skill集合：
 
 ```bash
-/plugins install ./plugins/vertical-plugins/china-research-methodology
-/plugins install ./plugins/vertical-plugins/financial-analysis
-/plugins install ./plugins/vertical-plugins/equity-research
-/plugins install ./plugins/agent-plugins/china-market-researcher
-/plugins install ./plugins/agent-plugins/china-model-builder
+kimi --skills-dir ./plugins/vertical-plugins/china-research-methodology/skills \
+  --skills-dir ./plugins/vertical-plugins/financial-analysis/skills
+kimi --skills-dir ./plugins/vertical-plugins/equity-research/skills
+kimi --skills-dir ./plugins/agent-plugins/china-market-researcher/skills
+kimi --skills-dir ./plugins/agent-plugins/china-model-builder/skills
 ```
 
-Kimi清单没有在本仓库中声明递归依赖解析。安装`financial-analysis`前先安装`china-research-methodology`；安装`equity-research`前再安装`financial-analysis`。两个Agent插件已经自带所引用Skill的副本。
+`--skills-dir`可重复使用，适合不安装的临时加载。Kimi交互式TUI另支持`/plugins install <path-or-url>`；安装仓库根目录只加载本目录Skill，不会递归加载子插件。纵向插件存在方法依赖；若宿主不解析依赖，应同时加载其所需集合。两个Agent插件已经自带所引用Skill的副本，可独立加载。
 
 ## 数据来源
 

@@ -1,0 +1,37 @@
+name: akshare-live-acceptance
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: akshare-live-acceptance
+  cancel-in-progress: false
+
+jobs:
+  live-acceptance:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Install hash-locked runtime dependencies
+        run: python -m pip install --require-hashes -r requirements/runtime-lock.txt
+      - name: Runtime preflight
+        run: python scripts/preflight.py --mode runtime
+      - name: Run router and acceptance unit tests
+        run: python -m unittest -v tests.test_china_market_data tests.test_akshare_live_acceptance
+      - name: Run sanitized read-only acceptance
+        run: python scripts/akshare_live_acceptance.py --output "$RUNNER_TEMP/akshare-live-acceptance.json"
+      - name: Upload sanitized acceptance evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: akshare-live-acceptance-${{ github.run_id }}
+          path: ${{ runner.temp }}/akshare-live-acceptance.json
+          if-no-files-found: warn
+          retention-days: 30

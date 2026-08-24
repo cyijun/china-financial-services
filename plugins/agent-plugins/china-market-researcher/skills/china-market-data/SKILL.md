@@ -1,6 +1,6 @@
 ---
 name: china-market-data
-description: 为中国A股研究选择并调用Tushare Pro或AKShare数据源，输出带接口、参数、抓取时间、可得时点和降级记录的结构化数据。用于行情、财务、估值、行业、ST状态及回测数据准备；严格PIT任务不得静默使用不具备历史可得时点的备用数据。
+description: 为中国A股和公募基金研究选择并调用Tushare Pro或AKShare数据源，输出带接口、参数、抓取时间、响应哈希、可得时点和降级记录的结构化数据。用于股票/ETF行情、基金净值、财务、估值、行业、ST状态及回测数据准备；严格PIT任务不得静默使用不具备历史可得时点的备用数据。
 ---
 
 # 中国市场数据路由
@@ -21,8 +21,8 @@ description: 为中国A股研究选择并调用Tushare Pro或AKShare数据源，
 3. 先调用Tushare。跨全市场财务截面在6000积分规划下使用 `income_vip`、`balancesheet_vip`、`cashflow_vip`、`fina_indicator_vip`、`forecast_vip` 或 `express_vip`。
 4. 只有主源发生依赖、网络、权限、限流或服务错误时才考虑AKShare；参数、schema和代码错误不得触发降级，主源返回空表也不自动等于失败。
 5. 若请求 `require_pit=true`，备用接口没有公告可得时点或历史成员区间时必须停止，不得静默降级。
-6. 清洗后执行schema、主键、日期、单位、重复、空值和行数检查。达到接口上限时标记`partial`，`require_complete=true`则失败关闭并要求分段。
-7. 输出数据及元信息：provider、interface、参数、抓取时间、`as_of`、PIT等级、过滤行数、权限是否真实验证和降级链。
+6. 清洗后执行schema、主键、日期、数值、非负、重复、版本、空值和行数检查。完整抽取优先显式设置`paginate=true`；达到接口上限但未证明分页完成时标记`partial`，`require_complete=true`则失败关闭。
+7. 输出数据及元信息：provider、interface、原始请求、实际接口参数、抓取时间、`as_of`、PIT等级、过滤行数、分页完成度、响应SHA-256、权限是否真实验证和降级链。
 
 ## 中国市场不变量
 
@@ -30,6 +30,7 @@ description: 为中国A股研究选择并调用Tushare Pro或AKShare数据源，
 - `disclosure_date` 是披露计划，不等于实际发布时刻。
 - 回测用价格默认取不复权日线和复权因子分别保存；不得用今天计算的前复权序列污染历史决策。
 - 历史股票池必须处理上市/退市/过会未发行状态、ST、停牌、涨跌停、指数/行业成分进出和`920xxx.BJ`等北交所代码。
+- 历史基金池同时获取`fund_basic`的L/D/I状态并按上市/摘牌区间过滤；摘牌日按区间终点含当日处理。ETF日线与基金净值不得混用，净值按`ann_date`而非仅`nav_date`进入严格PIT研究。
 - Tushare的同花顺板块接口在当前文档中要求6000积分，但版权与商业使用边界仍需遵守。
 - AKShare财务报表若没有可靠公告日期，只能用于当前研究或交叉核对，不能进入严格PIT回测。
 
@@ -39,14 +40,15 @@ description: 为中国A股研究选择并调用Tushare Pro或AKShare数据源，
 
 - `capabilities`：输出6000积分规划矩阵，不访问网络；
 - `fetch`：显式选择 `tushare`、`akshare`、`auto` 或 `mock`；
+- `adjust`：只用截止`as_of`已存在的不复权行情和复权因子构造qfq/hfq序列，未来因子不会改变历史输出；
 - Tushare优先、AKShare有条件降级；
-- 日期或ISO-8601时刻级`as_of`过滤、Token进程内读取、schema/单位契约、截断检测和可审计元数据。
+- 日期或ISO-8601时刻级`as_of`过滤、Token进程内读取、显式limit/offset分页、schema/单位契约、质量门禁、截断检测和可审计元数据。
 
 脚本只实现`capabilities`列出的规范数据集；Skill正文提到但清单未声明的数据必须由调用方提供带来源的数据，或现场扩展并测试路由，不能假装已有接口。
 
 运行真实接口前检查依赖和 `TUSHARE_TOKEN`。不要打印、写入或提交Token。
 
-运行环境为Python 3.9+；按实际启用的数据源安装`tushare`或`akshare`。Tushare认证只接受进程环境中的`TUSHARE_TOKEN`。
+运行环境为Python 3.11+；按实际启用的数据源安装锁定版本的`tushare`或`akshare`。Tushare认证只接受进程环境中的`TUSHARE_TOKEN`。
 
 ## 输出契约
 

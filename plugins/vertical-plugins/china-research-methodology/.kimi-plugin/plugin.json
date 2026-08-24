@@ -1,6 +1,6 @@
 {
   "name": "china-research-methodology",
-  "version": "1.0.0",
+  "version": "2.2.0",
   "description": "面向A股的证据优先投研方法论，含Tushare/AKShare数据路由、财务取证、估值、论点追踪、因子验证和红队审查。",
   "author": {
     "name": "cyijun"

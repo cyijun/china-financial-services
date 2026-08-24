@@ -14,7 +14,6 @@ from typing import Any, Dict
 
 ROOT = Path(__file__).resolve().parents[1]
 PLUGINS = ROOT / "plugins"
-MANAGED = ROOT / "managed-agent-cookbooks"
 errors: list[str] = []
 checked = 0
 
@@ -94,30 +93,6 @@ def tree_signature(path: Path) -> Dict[str, str]:
     return signature
 
 
-# YAML manifests and references.
-for path in sorted(MANAGED.rglob("*.yaml")):
-    checked += 1
-    try:
-        data = load_yaml(path) or {}
-    except ValueError as error:
-        err(f"YAML parse: {error}")
-        continue
-    base = path.parent
-    system = data.get("system") or {}
-    if isinstance(system, dict) and system.get("file") and not (base / system["file"]).resolve().is_file():
-        err(f"ref: {rel(path)} system.file -> {system['file']}")
-    for skill in data.get("skills") or []:
-        if not isinstance(skill, dict):
-            continue
-        if skill.get("path") and not (base / skill["path"]).resolve().exists():
-            err(f"ref: {rel(path)} skills.path -> {skill['path']}")
-        if skill.get("from_plugin") and not ((base / skill["from_plugin"]).resolve() / "skills").is_dir():
-            err(f"ref: {rel(path)} skills.from_plugin -> {skill['from_plugin']}")
-    for agent in data.get("callable_agents") or []:
-        if isinstance(agent, dict) and agent.get("manifest") and not (base / agent["manifest"]).resolve().is_file():
-            err(f"ref: {rel(path)} callable_agents.manifest -> {agent['manifest']}")
-
-
 # JSON manifests.
 marketplace = json_file(ROOT / ".claude-plugin" / "marketplace.json")
 if not marketplace.get("description"):
@@ -159,6 +134,8 @@ for path in sorted([*ROOT.glob("plugins/**/.kimi-plugin/plugin.json"), ROOT / ".
     claude_manifest = claude_manifests.get(plugin_root.resolve())
     if claude_manifest and (manifest.get("name"), manifest.get("version")) != (claude_manifest.get("name"), claude_manifest.get("version")):
         err(f"manifest-parity: {rel(path)} name/version differs from Claude manifest")
+    if manifest.get("license") not in (None, "Apache-2.0"):
+        err(f"license: {rel(path)} must use Apache-2.0 when a license field is present")
 
 CODEX_INTERFACE_REQUIRED = {
     "displayName",
@@ -186,6 +163,8 @@ for path in sorted(ROOT.glob("plugins/**/.codex-plugin/plugin.json")):
         err(f"codex-manifest: {rel(path)} missing interface fields {sorted(missing_interface)}")
     if not isinstance(interface.get("capabilities"), list):
         err(f"codex-manifest: {rel(path)} capabilities must be a list")
+    if manifest.get("license") != "Apache-2.0":
+        err(f"license: {rel(path)} must declare Apache-2.0")
     claude_manifest = claude_manifests.get(plugin_root)
     if claude_manifest and (manifest.get("name"), manifest.get("version")) != (claude_manifest.get("name"), claude_manifest.get("version")):
         err(f"manifest-parity: {rel(path)} name/version differs from Claude manifest")
@@ -231,6 +210,9 @@ for path in sorted(PLUGINS.glob("agent-plugins/*/agents/*.md")):
         err(f"agent-frontmatter: {rel(path)}: {error}")
         continue
     slug = path.parents[1].name
+    description = str(meta.get("description", ""))
+    if "用于" not in description and "use when" not in description.lower():
+        err(f"agent-frontmatter: {rel(path)} description lacks an explicit use-when trigger")
     bundle = {item.name for item in (path.parents[1] / "skills").iterdir() if item.is_dir()}
     section = re.search(r"## Skills this agent uses\s*(.*?)(?:\n## |\Z)", body, re.DOTALL)
     refs = set(re.findall(r"`([a-z0-9]+(?:-[a-z0-9]+)+)`", section.group(1) if section else ""))
@@ -262,36 +244,18 @@ for bundled in sorted(PLUGINS.glob("agent-plugins/*/skills/*")):
     if source and tree_signature(source) != tree_signature(bundled):
         err(f"bundled-skill: {rel(bundled)} drifted from {rel(source)}")
 
-
-# Managed-agent tool sufficiency and required files.
-REQUIRED_COOKBOOK_TOOLS = {"read", "write", "edit", "bash", "grep", "glob", "web_search", "web_fetch"}
-for directory in sorted(MANAGED.iterdir()):
-    if not directory.is_dir():
+# Every explicit cross-skill call in an agent bundle must close locally. Codex
+# manifests do not resolve Claude-style dependencies, so vendoring is required.
+known_skill_names = set(skill_dirs)
+for agent_root in sorted(PLUGINS.glob("agent-plugins/*")):
+    if not agent_root.is_dir() or not (agent_root / "skills").is_dir():
         continue
-    for required in ("agent.yaml", "README.md", "steering-examples.json"):
-        if not (directory / required).is_file():
-            err(f"missing: {rel(directory)}/{required}")
-    try:
-        data = load_yaml(directory / "agent.yaml") or {}
-        configs = ((data.get("tools") or [{}])[0].get("configs") or [])
-        enabled = {item.get("name") for item in configs if item.get("enabled") is True}
-        missing = REQUIRED_COOKBOOK_TOOLS - enabled
-        if missing:
-            err(f"cookbook-tools: {rel(directory)} missing enabled tools {sorted(missing)}")
-    except (ValueError, IndexError, AttributeError) as error:
-        err(f"cookbook-tools: {rel(directory)}: {error}")
-
-
-# Hook parity across plugins.
-hook_source = PLUGINS / "vertical-plugins" / "financial-analysis" / "hooks"
-for plugin in sorted(PLUGINS.glob("*-plugins/*")):
-    if not plugin.is_dir():
-        continue
-    hooks = plugin / "hooks"
-    if not hooks.is_dir():
-        err(f"hooks: {rel(plugin)} has no hooks directory")
-    elif tree_signature(hook_source) != tree_signature(hooks):
-        err(f"hooks: {rel(hooks)} drifted from {rel(hook_source)}")
+    bundle = {item.name for item in (agent_root / "skills").iterdir() if item.is_dir()}
+    for skill_path in sorted((agent_root / "skills").glob("*/SKILL.md")):
+        text = skill_path.read_text(encoding="utf-8")
+        refs = {name for name in re.findall(r"`([a-z0-9]+(?:-[a-z0-9]+)+)`", text) if name in known_skill_names}
+        for ref in sorted(refs - bundle):
+            err(f"skill-closure: {rel(skill_path)} calls missing bundled skill {ref}")
 
 
 # High-risk stale patterns should never re-enter active methodology.
@@ -314,10 +278,49 @@ for path in sorted(ROOT.glob("plugins/**/scripts/*.py")):
     if "ts.get_token(" in path.read_text(encoding="utf-8"):
         err(f"credential: {rel(path)} reads a global Tushare token cache")
 
-deploy_text = (ROOT / "scripts" / "deploy-managed-agent.sh").read_text(encoding="utf-8")
-if "del(.output_schema)" in deploy_text:
-    err("deploy: output_schema is silently deleted")
+# Removed runtime shapes must not silently re-enter this Skill-only project.
+for forbidden in (
+    ROOT / "managed-agent-cookbooks",
+    ROOT / "scripts" / "deploy-managed-agent.sh",
+    ROOT / "scripts" / "test-cookbooks.sh",
+    ROOT / "scripts" / "sync-hooks.py",
+    ROOT / "scripts" / "orchestrate.py",
+    ROOT / "scripts" / "validate.py",
+    ROOT / "tests" / "test_hooks.py",
+):
+    if forbidden.exists():
+        err(f"removed-runtime: {rel(forbidden)} must not exist")
+for hooks in sorted(PLUGINS.glob("**/hooks")):
+    if hooks.is_dir():
+        err(f"removed-runtime: {rel(hooks)} must not exist")
 
+# Attribution is an acceptance gate, not an unverified prose convention.
+provenance = (ROOT / "PROVENANCE.md").read_text(encoding="utf-8") if (ROOT / "PROVENANCE.md").is_file() else ""
+for revision in (
+    "33a3d8a9d6e5c3d4861731933a8857cc5e03315d",
+    "7c428944a6718c35461f839c618ae66334b6371b",
+    "99e84abaad965f75dd15cab2fcb0f3f61d30577b",
+    "d82998e7df393c671ede2387a8435075f0b633f5",
+):
+    if revision not in provenance:
+        err(f"provenance: missing pinned upstream revision {revision}")
+if not (ROOT / "NOTICE").is_file():
+    err("provenance: root NOTICE is missing")
+
+# Direct pins must be present in the hashed transitive lock.
+runtime_requirements = (ROOT / "requirements" / "runtime.txt").read_text(encoding="utf-8").splitlines()
+runtime_lock = (ROOT / "requirements" / "runtime-lock.txt").read_text(encoding="utf-8")
+for requirement in runtime_requirements:
+    pin = requirement.strip()
+    if pin and not pin.startswith("#") and pin.lower() not in runtime_lock.lower():
+        err(f"dependency-lock: direct pin missing from runtime-lock.txt: {pin}")
+live_requirements = (ROOT / "requirements" / "live-acceptance.txt").read_text(encoding="utf-8").splitlines()
+live_lock_path = ROOT / "requirements" / "live-acceptance-lock.txt"
+live_lock = live_lock_path.read_text(encoding="utf-8") if live_lock_path.is_file() else ""
+for requirement in live_requirements:
+    pin = requirement.strip()
+    if pin and not pin.startswith("#") and pin.lower() not in live_lock.lower():
+        err(f"dependency-lock: direct pin missing from live-acceptance-lock.txt: {pin}")
 
 if errors:
     print(f"FAIL — {len(errors)} issue(s) across {checked} checked files:", file=sys.stderr)

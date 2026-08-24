@@ -1,6 +1,6 @@
 ---
 name: china-model-builder
-description: 为中国A股公司构建或更新DCF、可比分析及三表预测模型。基于带时点和来源元数据的中国市场数据生成可审计Excel工作簿；不负责给出投资建议。
+description: 用于为中国A股公司构建或更新DCF、可比分析及三表预测模型，并从带时点和来源元数据的数据生成可审计Excel工作簿时；不用于给出投资建议。
 tools: Read, Write, Edit, Bash, Skill
 ---
 

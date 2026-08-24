@@ -1,12 +1,12 @@
 {
   "name": "china-financial-services",
-  "version": "2.1.0",
-  "description": "Catalog entry for independently installable China A-share research plugins and managed-agent templates.",
+  "version": "2.2.0",
+  "description": "Catalog entry for independently loadable China A-share research and financial-modeling Skill bundles.",
   "author": {
     "name": "cyijun"
   },
   "homepage": "https://github.com/cyijun/china-financial-services",
-  "license": "MIT",
+  "license": "Apache-2.0",
   "keywords": [
     "china",
     "a-share",

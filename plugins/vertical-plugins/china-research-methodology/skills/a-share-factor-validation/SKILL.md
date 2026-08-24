@@ -17,6 +17,16 @@ description: 审计A股因子、选股规则和回测是否满足point-in-time�
 8. 做子期间、行业、市值、市场状态、参数邻域、延迟、成本、极端点、替代数据源和时序保留重采样。
 9. 给出`invalidated`、`inconclusive`、`research candidate`、`out-of-sample supported`或`production unverified`状态。
 
+## 可执行研究链
+
+按`预注册 → 数据快照 → 代码提交 → 运行 → 结果登记 → 样本外复核 → 衰减监控`推进，不允许只保存最终图表：
+
+1. 先用`scripts/factor_registry.py`登记假设、因子族、数据SHA-256、代码Git SHA、样本边界和初始状态。
+2. 将PIT清洗后的长表导出为CSV，至少包含`date,ts_code,factor,forward_return`；`forward_return`必须从信号后首个允许成交时点开始，可选`tradable`显式排除当时停牌或不可成交样本。
+3. 运行`scripts/factor_validation.py input.csv --cost-bps <成本> --output report.json`。脚本执行逐日截面Spearman IC、块自助区间、分组多空、真实换仓事件和成本后结果；库函数另提供purged walk-forward、BH-FDR、CSCV-PBO与未来数据扰动检查。
+4. 结果连同数据快照、参数搜索清单、失败实验和运行环境回写注册表。未经独立最终样本和真实数据链验收，状态最多为`research_candidate`或`production_unverified`。
+5. 上线后监控覆盖率、IC分布、换手、容量、因子暴露和结构断点；衰减监控是新实验，不得事后改变原预注册门槛。
+
 ## 硬约束
 
 - 不用固定IC、IR、Sharpe、回撤或胜率阈值单独宣告有效。
@@ -24,6 +34,7 @@ description: 审计A股因子、选股规则和回测是否满足point-in-time�
 - IID随机重排不能冒充完整稳健性检验。
 - 未运行的测试不得写成通过；Mock通过不等于真实Tushare链可用。
 - 不宣称实盘收益，不下单。
+- 脚本不替调用者推断涨跌停、停牌或T+1；这些字段必须由PIT数据链先构造，缺失时不能声称完成可交易回测。
 
 ## 输出契约
 

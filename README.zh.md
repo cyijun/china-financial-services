@@ -2,7 +2,7 @@
 
 [English](README.md) | 中文
 
-面向中国 A 股市场研究的 AI 智能体插件与管理代理模板，基于 [Tushare](https://tushare.pro/) 数据驱动。
+面向中国A股市场研究、可由Codex、Claude Code和Kimi加载的Skill/插件，主数据源为[Tushare](https://tushare.pro/)，AKShare仅作受控补充。
 
 > **重要声明：** 本仓库中的任何内容均不构成投资、法律、税务或会计建议。这些智能体仅起草分析师工作底稿，供合格专业人士审阅。它们不提供投资建议、不执行交易、不承担风险。所有输出均需经人工确认后方可使用。
 
@@ -30,36 +30,22 @@ plugins/
     financial-analysis/           # Skills（唯一数据源）
     equity-research/
     china-research-methodology/   # 证据优先的方法论与中国数据路由
-managed-agent-cookbooks/
-  china-market-researcher/        # 部署清单，用于 POST /v1/agents
-  china-model-builder/
 scripts/
   check.py                        # 校验所有清单
   sync-agent-skills.py            # 将 vertical skills 同步到 agent 包
-  sync-hooks.py                   # 将年份校验 hooks 同步到所有插件
-  deploy-managed-agent.sh         # 将 cookbook 部署到 CMA
-  test-cookbooks.sh               # 所有 cookbook 的干跑验证
-  validate.py                     # 输出 schema 校验辅助
-  orchestrate.py                  # 跨智能体交接的参考事件循环
+  preflight.py                    # 检查Python、运行时与凭证就绪状态
+  tushare_live_acceptance.py      # 脱敏、只读的真实接口验收
+  akshare_live_acceptance.py      # AKShare全声明路由的脱敏只读验收
 ```
 
 ## 示例
 
-智能体生成的示例输出见 [`out/`](out/)。
+仓库保留了版本化示例产物，位于[`out/`](out/)：
 
-### 命令行使用
+![命令行示例](out/demo.png)
 
-![CLI Demo](out/demo.png)
-
-### 交付物
-
-**Excel 工作簿**（[`portfolio_2026Q2.xlsx`](out/portfolio_2026Q2.xlsx)）——由 `china-model-builder` 生成：
-
-![Excel Report](out/excel_report.png)
-
-**幻灯片**（[`portfolio_roadshow_2026Q2.pptx`](out/portfolio_roadshow_2026Q2.pptx)）——由 `china-market-researcher` 生成：
-
-![PPT Report](out/ppt_report.png)
+- [`portfolio_2026Q2.xlsx`](out/portfolio_2026Q2.xlsx)及其[渲染预览](out/excel_report.png)
+- [`portfolio_roadshow_2026Q2.pptx`](out/portfolio_roadshow_2026Q2.pptx)及其[渲染预览](out/ppt_report.png)
 
 ## 安装
 
@@ -81,33 +67,19 @@ codex plugin add china-market-researcher@china-financial-services
 codex plugin add china-model-builder@china-financial-services
 ```
 
-Codex会加载各插件的`skills/`。Claude专用的Managed Agents部署脚本与hooks不属于Codex运行时；Agent插件在Codex中以自包含Skill工作流运行。纵向插件请按`china-research-methodology` → `financial-analysis` → `equity-research`顺序添加。
+Codex会加载各插件的`skills/`。Agent插件以自包含Skill工作流运行；本仓库明确不包含远程Agent部署能力，也不包含command hooks。纵向插件请按`china-research-methodology` → `financial-analysis` → `equity-research`顺序添加。
 
 ### Kimi Code（CLI）
 
-#### 方式 A：将本仓库作为插件安装
-
-添加 `https://github.com/cyijun/china-financial-services` 作为插件源。Kimi 会读取仓库根目录清单并安装一个**目录入口**；它只介绍子插件，不会递归加载或直接路由子插件Skill。
+若不安装、只在当前会话加载，Kimi Code CLI 0.33.0提供可重复的`--skills-dir`参数：
 
 ```bash
-/plugins install https://github.com/cyijun/china-financial-services
+kimi --skills-dir ./plugins/vertical-plugins/china-research-methodology/skills \
+  --skills-dir ./plugins/vertical-plugins/financial-analysis/skills
+kimi --skills-dir ./plugins/agent-plugins/china-market-researcher/skills
 ```
 
-#### 方式 B：从本地目录安装独立子插件
-
-```bash
-/plugins install ./plugins/vertical-plugins/financial-analysis
-/plugins install ./plugins/vertical-plugins/equity-research
-/plugins install ./plugins/vertical-plugins/china-research-methodology
-/plugins install ./plugins/agent-plugins/china-market-researcher
-/plugins install ./plugins/agent-plugins/china-model-builder
-```
-
-然后运行 `/plugins info <plugin-name>` 验证，并运行 `/reload` 激活。
-
-Kimi下请先安装`china-research-methodology`，再安装依赖它的`financial-analysis`；`equity-research`还依赖`financial-analysis`。两个Agent插件已自带其工作流所需Skill副本。
-
-智能体插件（`china-market-researcher`、`china-model-builder`）加载后会通过 `sessionStart.skill` 自动启动工作流。
+Kimi交互式TUI也支持持久化的`/plugins install <path-or-url>`，并识别`.kimi-plugin/plugin.json`；本仓库不会替你执行安装。安装仓库根目录只会加载目录Skill，两个Agent插件则各自内置工作流引用的全部Skill，可独立加载。
 
 ### Claude Code（CLI）
 
@@ -124,17 +96,6 @@ claude plugin install china-research-methodology@china-financial-services
 
 在 **设置 → 插件 → 添加插件** 中粘贴仓库 URL，或压缩 `plugins/` 下任意目录后上传。
 
-### 托管智能体（API）
-
-> 当前使用 Claude Managed Agents API。后续可能增加同等的 Kimi 部署支持。
-
-```bash
-export ANTHROPIC_API_KEY=sk-ant-...
-scripts/deploy-managed-agent.sh china-market-researcher
-```
-
-需要 `jq`、`zip`、`curl`，以及`python3 + pyyaml`或`ruby + psych`之一。
-
 ## 开发
 
 ```bash
@@ -144,15 +105,11 @@ python3 scripts/check.py
 # 修改 vertical-plugins/ 中的 skill 后，同步到 agent 包
 python3 scripts/sync-agent-skills.py
 
-# 修改 financial-analysis/ 中的 hooks 后，同步到所有插件
-python3 scripts/sync-hooks.py
-
-# 所有 cookbook 干跑验证（CI 门禁）
-bash scripts/test-cookbooks.sh
-
-# 数据路由与PIT离线测试（无需SDK、Token或网络）
-python3 -m unittest -v tests.test_china_market_data
+# 全部离线测试（无需SDK、Token或网络）
+python3 -m unittest discover -v tests
 ```
+
+GitHub Actions中的`repository-gates`负责离线测试、结构门禁和一次性Runner上的宿主加载验证；`tushare-live-acceptance`与`akshare-live-acceptance`均为手动触发、只读并上传脱敏JSON证据。真实验收与离线通过分开报告。
 
 ## 数据来源
 
@@ -163,7 +120,7 @@ python3 -m unittest -v tests.test_china_market_data
 
 ## 致谢
 
-本项目改编自 [Anthropic Financial Services cookbook](https://github.com/anthropics/financial-services)，其提供了此处使用的底层插件架构、管理代理模式及智能体集成框架。
+本项目借鉴[Anthropic Financial Services cookbook](https://github.com/anthropics/financial-services)的插件与Skill架构；方法论来源、上游精确版本和修改边界见[`PROVENANCE.md`](PROVENANCE.md)与[`NOTICE`](NOTICE)。
 
 ## 许可证
 

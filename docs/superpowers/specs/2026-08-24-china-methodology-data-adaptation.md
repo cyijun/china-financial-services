@@ -2,7 +2,7 @@
 
 ## 目标
 
-在保留原有Anthropic派生插件结构、Claude/Kimi兼容性和人工签核边界的基础上，增加一套可独立安装的A股方法论插件，并把Tushare 6000积分与AKShare纳入可审计数据路由。
+在保留原有Anthropic派生插件结构、Codex/Claude Code/Kimi兼容性和人工签核边界的基础上，增加一套可独立加载的A股方法论插件，并把Tushare 6000积分与AKShare纳入可审计数据路由。本仓库只提供Skill与插件，不提供Managed Agent部署能力，也不包含命令hooks。
 
 ## 架构
 
@@ -43,5 +43,5 @@
 ## 验证层级
 
 1. 标准库Fake客户端测试：VIP路由、保守公告日过滤、AKShare字段标准化、降级血缘、严格PIT拒绝和Mock隔离。
-2. Skill结构、插件manifest、vendored一致性和cookbook dry-run。
-3. 真实Tushare/AKShare冒烟：仅在依赖和Token存在后运行；本设计不把离线通过写成生产可用。
+2. Skill结构、三类宿主manifest、依赖闭包、vendored一致性与宿主CLI加载测试。
+3. 真实Tushare/AKShare只读验收：分别覆盖声明接口、写入响应摘要和仓库commit，不保存明细；本设计不把离线通过写成生产可用。

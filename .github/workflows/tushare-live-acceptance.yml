@@ -30,7 +30,9 @@ jobs:
       - name: Verify secret is configured without printing it
         run: python -c 'import os, sys; sys.exit(0 if os.environ.get("TUSHARE_TOKEN") else 2)'
       - name: Install pinned live-test dependencies
-        run: python -m pip install "tushare==1.4.29" "pandas==2.2.3"
+        run: python -m pip install --require-hashes -r requirements/live-acceptance-lock.txt
+      - name: Live preflight
+        run: python scripts/preflight.py --mode live
       - name: Run router and acceptance unit tests
         run: python -m unittest -v tests.test_china_market_data tests.test_tushare_live_acceptance
       - name: Run sanitized read-only acceptance

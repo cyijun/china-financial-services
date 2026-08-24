@@ -1,90 +1,114 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
+"""分页导出Tushare股票原始数据与可复核元信息。
+
+这是非PIT原始取数示例。历史研究和回测应改用china-market-data路由。
 """
-股票数据获取示例脚本
-"""
+
+from __future__ import annotations
+
+import argparse
+import hashlib
+import json
+import os
+from datetime import datetime, timezone
+from pathlib import Path
+from typing import Any, Dict, List, Mapping, Sequence, Tuple
 
 import tushare as ts
-import os
-
-# 只读取进程环境中的Token，不使用持久化全局缓存。
-token = os.getenv('TUSHARE_TOKEN')
-if not token:
-    raise RuntimeError('TUSHARE_TOKEN is required; global token caches are not used')
-
-# 初始化pro接口
-pro = ts.pro_api(token)
 
 
-def get_stock_list():
-    """
-    获取股票列表
-    """
-    try:
-        data = pro.stock_basic(exchange='', list_status='L', fields='ts_code,symbol,name,area,industry,list_date')
-        print("股票列表获取成功：")
-        print(data.head())
-        return data
-    except Exception as e:
-        print(f"获取股票列表失败：{e}")
-        return None
+def _client() -> Any:
+    token = os.environ.get("TUSHARE_TOKEN")
+    if not token:
+        raise RuntimeError("TUSHARE_TOKEN is required; global token caches are not used")
+    return ts.pro_api(token)
 
 
-def get_daily_data(ts_code, start_date, end_date):
-    """
-    获取股票日线数据
-    """
-    try:
-        data = pro.daily(ts_code=ts_code, start_date=start_date, end_date=end_date)
-        print(f"{ts_code}日线数据获取成功：")
-        print(data.head())
-        return data
-    except Exception as e:
-        print(f"获取日线数据失败：{e}")
-        return None
+def _records(frame: Any) -> List[Dict[str, Any]]:
+    if frame is None or not hasattr(frame, "to_dict"):
+        raise TypeError(f"unsupported Tushare response: {type(frame).__name__}")
+    return [dict(row) for row in frame.to_dict(orient="records")]
 
 
-def get_financial_data(ts_code, year, quarter):
-    """
-    获取财务指标数据
-    """
-    try:
-        period = {1: '0331', 2: '0630', 3: '0930', 4: '1231'}[quarter]
-        data = pro.fina_indicator(ts_code=ts_code, period=f'{year}{period}')
-        print(f"{ts_code}财务指标数据获取成功：")
-        print(data.head())
-        return data
-    except Exception as e:
-        print(f"获取财务指标数据失败：{e}")
-        return None
+def _digest(value: Any) -> str:
+    raw = json.dumps(value, ensure_ascii=False, sort_keys=True, separators=(",", ":"), default=str).encode("utf-8")
+    return hashlib.sha256(raw).hexdigest()
 
 
-def main():
-    """
-    主函数
-    """
-    print("===== tushare 股票数据获取示例 =====")
-    
-    # 获取股票列表
-    stock_list = get_stock_list()
-    
-    if stock_list is not None:
-        # 获取第一只股票的代码
-        ts_code = stock_list['ts_code'].iloc[0]
-        print(f"\n使用股票代码：{ts_code}")
-        
-        # 获取日线数据（最近30天）
-        import datetime
-        end_date = datetime.datetime.now().strftime('%Y%m%d')
-        start_date = (datetime.datetime.now() - datetime.timedelta(days=30)).strftime('%Y%m%d')
-        print(f"\n获取日线数据：{start_date} 至 {end_date}")
-        get_daily_data(ts_code, start_date, end_date)
-        
-        # 获取财务数据（最近一年）
-        current_year = datetime.datetime.now().year
-        print(f"\n获取财务数据：{current_year-1}年 第4季度")
-        get_financial_data(ts_code, current_year-1, 4)
+def fetch_all(client: Any, api_name: str, params: Mapping[str, Any], *, page_size: int, max_pages: int) -> Tuple[List[Dict[str, Any]], List[int]]:
+    method = getattr(client, api_name)
+    rows: List[Dict[str, Any]] = []
+    counts: List[int] = []
+    seen: set[str] = set()
+    for page in range(max_pages):
+        batch = _records(method(**dict(params), limit=page_size, offset=page * page_size))
+        fingerprint = _digest(batch)
+        if batch and fingerprint in seen:
+            raise RuntimeError(f"{api_name} repeated a page; completeness is not established")
+        seen.add(fingerprint)
+        rows.extend(batch)
+        counts.append(len(batch))
+        if len(batch) < page_size:
+            return rows, counts
+    raise RuntimeError(f"{api_name} exceeded max_pages={max_pages}; narrow or segment the request")
+
+
+def _write(output: Path, api_name: str, params: Mapping[str, Any], rows: Sequence[Mapping[str, Any]], page_counts: Sequence[int]) -> None:
+    payload = {
+        "dataset": api_name,
+        "records": list(rows),
+        "metadata": {
+            "provider": "tushare",
+            "interface": api_name,
+            "request_params": dict(params),
+            "requested_at": datetime.now(timezone.utc).isoformat(),
+            "row_count": len(rows),
+            "page_row_counts": list(page_counts),
+            "pagination_complete": True,
+            "response_sha256": _digest(rows),
+            "pit_eligible": False,
+            "warning": "Raw current-query example; announcement availability and historical-universe controls are not reconstructed.",
+        },
+    }
+    output.parent.mkdir(parents=True, exist_ok=True)
+    temporary = output.with_suffix(output.suffix + ".tmp")
+    temporary.write_text(json.dumps(payload, ensure_ascii=False, indent=2, default=str) + "\n", encoding="utf-8")
+    temporary.replace(output)
+
+
+def main() -> int:
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("dataset", choices=("stock-list", "daily", "financial-indicator"))
+    parser.add_argument("--ts-code")
+    parser.add_argument("--start-date")
+    parser.add_argument("--end-date")
+    parser.add_argument("--period")
+    parser.add_argument("--page-size", type=int, default=5000)
+    parser.add_argument("--max-pages", type=int, default=100)
+    parser.add_argument("--output", type=Path, required=True)
+    args = parser.parse_args()
+    if args.page_size < 1 or args.max_pages < 1:
+        parser.error("page-size and max-pages must be positive")
+
+    if args.dataset == "stock-list":
+        api_name = "stock_basic"
+        params: Dict[str, Any] = {"exchange": "", "list_status": "L", "fields": "ts_code,symbol,name,market,exchange,list_date,delist_date"}
+    elif args.dataset == "daily":
+        if not args.ts_code or not args.start_date or not args.end_date:
+            parser.error("daily requires --ts-code, --start-date and --end-date")
+        api_name = "daily"
+        params = {"ts_code": args.ts_code, "start_date": args.start_date, "end_date": args.end_date, "fields": "ts_code,trade_date,open,high,low,close,pre_close,vol,amount"}
+    else:
+        if not args.ts_code or not args.period:
+            parser.error("financial-indicator requires --ts-code and --period")
+        api_name = "fina_indicator"
+        params = {"ts_code": args.ts_code, "period": args.period}
+
+    rows, counts = fetch_all(_client(), api_name, params, page_size=args.page_size, max_pages=args.max_pages)
+    _write(args.output, api_name, params, rows, counts)
+    print(json.dumps({"output": str(args.output), "interface": api_name, "row_count": len(rows), "response_sha256": _digest(rows)}, ensure_ascii=False))
+    return 0
 
 
 if __name__ == "__main__":
-    main()
+    raise SystemExit(main())

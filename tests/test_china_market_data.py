@@ -54,6 +54,23 @@ class FakeTushare:
         }
         return FakeFrame(rows[params["list_status"]])
 
+    def fund_basic(self, **params):
+        self.calls.append(("fund_basic", params))
+        rows = {
+            "L": [{"ts_code": "510300.SH", "market": "E", "list_date": "20120528", "delist_date": None, "status": "L"}],
+            "D": [{"ts_code": "510301.SH", "market": "E", "list_date": "20100101", "delist_date": "20250102", "status": "D"}],
+            "I": [{"ts_code": "510302.SH", "market": "E", "list_date": "20260101", "delist_date": None, "status": "I"}],
+        }
+        return FakeFrame(rows[params["status"]])
+
+    def fund_daily(self, **params):
+        self.calls.append(("fund_daily", params))
+        return FakeFrame([{"ts_code": "510300.SH", "trade_date": "20250102", "open": 4.0, "high": 4.1, "low": 3.9, "close": 4.05, "vol": 10.0, "amount": 40.5}])
+
+    def fund_nav(self, **params):
+        self.calls.append(("fund_nav", params))
+        return FakeFrame([{"ts_code": "510300.SH", "ann_date": "20250103", "nav_date": "20250102", "unit_nav": 4.05, "accum_nav": 4.05}])
+
     def index_member_all(self, **params):
         self.calls.append(("index_member_all", params))
         if params.get("is_new") == "Y":
@@ -79,6 +96,10 @@ class FakeTushare:
         self.calls.append(("stk_limit", params))
         return FakeFrame([{"ts_code": "600000.SH", "trade_date": "20250102", "pre_close": 10.0, "up_limit": 11.0, "down_limit": 9.0}])
 
+    def index_weight(self, **params):
+        self.calls.append(("index_weight", params))
+        return FakeFrame([{"index_code": "000300.SH", "con_code": "600000.SH", "trade_date": "20250102", "weight": 0.25}])
+
 
 class PermissionDeniedTushare:
     def daily(self, **params):
@@ -96,8 +117,10 @@ class ProgrammingErrorTushare:
 class FakeAkshare:
     def __init__(self, amount=False):
         self.amount = amount
+        self.calls = []
 
     def stock_zh_a_hist(self, **params):
+        self.calls.append(params)
         first = {"日期": "2025-01-02", "开盘": 9.8, "收盘": 10.0, "成交量": 100}
         if self.amount:
             first["成交额"] = 123000
@@ -105,6 +128,17 @@ class FakeAkshare:
 
     def stock_info_a_code_name(self):
         return FakeFrame([{"code": "920001", "name": "北交样例"}])
+
+
+class FakePaginatedTushare:
+    def daily(self, **params):
+        offset = params["offset"]
+        rows = [
+            {"ts_code": "600000.SH", "trade_date": "20250101"},
+            {"ts_code": "600000.SH", "trade_date": "20250102"},
+            {"ts_code": "600000.SH", "trade_date": "20250103"},
+        ]
+        return FakeFrame(rows[offset:offset + params["limit"]])
 
 
 class ChinaMarketDataTests(unittest.TestCase):
@@ -118,6 +152,17 @@ class ChinaMarketDataTests(unittest.TestCase):
         self.assertEqual(result.metadata["missing_availability_dropped"], 1)
         self.assertFalse(result.metadata["revision_history_complete"])
         self.assertIsNone(result.metadata["documented_row_limit"])
+
+    def test_financial_projection_keeps_identity_and_availability_fields(self):
+        fake = FakeTushare()
+        module.TushareProvider(client=fake, points_profile=6000).fetch(
+            "income",
+            {"period": "20241231", "universe_mode": "cross_section", "fields": "ts_code,end_date,revenue"},
+            as_of="2025-03-31",
+            require_pit=True,
+        )
+        fields = set(fake.calls[0][1]["fields"].split(","))
+        self.assertTrue({"ann_date", "f_ann_date", "report_type", "comp_type", "update_flag"}.issubset(fields))
 
     def test_date_only_announcement_not_available_until_next_day(self):
         provider = module.TushareProvider(client=FakeTushare(), points_profile=6000)
@@ -138,6 +183,27 @@ class ChinaMarketDataTests(unittest.TestCase):
         result = module.TushareProvider(client=fake).fetch("security_master", {"list_status": "ALL", "fields": "ts_code,list_date,delist_date"}, as_of="20250102", require_pit=True)
         self.assertEqual([row["ts_code"] for row in result.records], ["600000.SH"])
         self.assertEqual([call[1]["list_status"] for call in fake.calls], ["L", "D", "P", "G"])
+
+    def test_delist_date_is_inclusive_then_removed_next_day(self):
+        provider = module.TushareProvider(client=FakeTushare())
+        on_date = provider.fetch("security_master", {"list_status": "ALL", "fields": "ts_code,list_date,delist_date"}, as_of="20200101", require_pit=True)
+        next_day = provider.fetch("security_master", {"list_status": "ALL", "fields": "ts_code,list_date,delist_date"}, as_of="20200102", require_pit=True)
+        self.assertIn("600001.SH", [row["ts_code"] for row in on_date.records])
+        self.assertNotIn("600001.SH", [row["ts_code"] for row in next_day.records])
+
+    def test_fund_master_lifecycle_and_fund_data_contracts(self):
+        provider = module.TushareProvider(client=FakeTushare(), points_profile=6000)
+        on_delist = provider.fetch("fund_basic", {"status": "ALL", "market": "E", "fields": "ts_code,market,list_date,delist_date,status"}, as_of="20250102", require_pit=True)
+        after_delist = provider.fetch("fund_master", {"status": "ALL", "market": "E"}, as_of="20250103", require_pit=True)
+        daily = provider.fetch("fund_daily", {"ts_code": "510300.SH", "trade_date": "20250102"}, as_of="20250102T16:00:00+08:00", require_pit=True)
+        nav_before = provider.fetch("fund_nav", {"ts_code": "510300.SH"}, as_of="20250103T23:59:59+08:00", require_pit=True)
+        nav_after = provider.fetch("fund_nav", {"ts_code": "510300.SH"}, as_of="20250104T00:00:00+08:00", require_pit=True)
+        self.assertIn("510301.SH", [row["ts_code"] for row in on_delist.records])
+        self.assertNotIn("510301.SH", [row["ts_code"] for row in after_delist.records])
+        self.assertEqual(daily.metadata["units"]["amount"], "thousand_CNY")
+        self.assertEqual(nav_before.records, [])
+        self.assertEqual(nav_after.records[0]["unit_nav"], 4.05)
+        self.assertEqual([call[1]["status"] for call in provider.client.calls if call[0] == "fund_basic"], ["L", "D", "I", "L", "D", "I"])
 
     def test_security_master_rejects_nonhistorical_fields(self):
         provider = module.TushareProvider(client=FakeTushare())
@@ -177,11 +243,36 @@ class ChinaMarketDataTests(unittest.TestCase):
         self.assertEqual(after.records[0]["up_limit"], 11.0)
 
     def test_akshare_daily_schema_code_amount_and_units(self):
-        result = module.AkshareProvider(client=FakeAkshare(amount=True)).fetch("daily_bar", {"ts_code": "600000.SH", "start_date": "20250101", "end_date": "20250103"}, as_of="20250102", require_pit=True)
-        self.assertEqual(result.metadata["request_params"]["symbol"], "600000")
+        fake = FakeAkshare(amount=True)
+        result = module.AkshareProvider(client=fake).fetch("daily_bar", {"ts_code": "600000.SH", "start_date": "20250101", "end_date": "20250103"}, as_of="20250102", require_pit=True)
+        self.assertEqual(result.metadata["request_params"]["ts_code"], "600000.SH")
+        self.assertEqual(result.metadata["provider_call_params"]["symbol"], "600000")
         self.assertEqual(result.records[0]["ts_code"], "600000.SH")
         self.assertEqual(result.records[0]["amount"], 123.0)
         self.assertEqual(result.metadata["units"]["amount"], "thousand_CNY")
+
+    def test_akshare_fallback_translates_trade_date_and_drops_fields(self):
+        fake = FakeAkshare()
+        result = module.AkshareProvider(client=fake).fetch(
+            "daily_bar",
+            {"ts_code": "600000.SH", "trade_date": "20250102", "fields": "ts_code,trade_date,close"},
+            as_of="20250102",
+            require_pit=True,
+        )
+        self.assertEqual(fake.calls[0]["start_date"], "20250102")
+        self.assertEqual(fake.calls[0]["end_date"], "20250102")
+        self.assertNotIn("fields", fake.calls[0])
+        self.assertEqual(len(result.records), 1)
+
+    def test_akshare_adjustment_is_rejected_in_strict_pit(self):
+        with self.assertRaises(module.DataProviderError) as caught:
+            module.AkshareProvider(client=FakeAkshare()).fetch(
+                "daily_bar",
+                {"ts_code": "600000.SH", "adjust": "qfq"},
+                as_of="20250102",
+                require_pit=True,
+            )
+        self.assertEqual(caught.exception.code, "adjustment_not_pit_safe")
 
     def test_beijing_920_code_is_canonicalized(self):
         self.assertEqual(module._canonical_ts_code("920001"), "920001.BJ")
@@ -241,6 +332,68 @@ class ChinaMarketDataTests(unittest.TestCase):
         metadata = module._contract_metadata(spec, [{"id": 1}, {"id": 2}, {"id": 3}], False)
         self.assertFalse(metadata["truncation_suspected"])
         self.assertTrue(metadata["documentation_limit_drift"])
+
+    def test_financial_contract_distinguishes_duplicates_and_versions(self):
+        spec = module.TUSHARE_ENDPOINTS["income"]
+        base = {"ts_code": "600000.SH", "end_date": "20241231", "report_type": "1", "comp_type": "1"}
+        rows = [
+            {**base, "ann_date": "20250320", "f_ann_date": "20250320", "update_flag": "0"},
+            {**base, "ann_date": "20250320", "f_ann_date": "20250320", "update_flag": "0"},
+            {**base, "ann_date": "20250420", "f_ann_date": "20250420", "update_flag": "1"},
+        ]
+        metadata = module._contract_metadata(spec, rows, False)
+        self.assertEqual(metadata["duplicate_key_rows"], 1)
+        self.assertEqual(metadata["multi_version_groups"], 1)
+
+    def test_quality_contract_can_fail_closed(self):
+        spec = module.TUSHARE_ENDPOINTS["daily_bar"]
+        with self.assertRaises(module.DataProviderError) as caught:
+            module._contract_metadata(
+                spec,
+                [{"ts_code": "600000.SH", "trade_date": "bad", "close": "not-a-number", "vol": -1}],
+                False,
+                require_quality=True,
+            )
+        self.assertEqual(caught.exception.code, "data_quality_failed")
+
+    def test_explicit_offset_pagination_establishes_completeness(self):
+        original = module.TUSHARE_ENDPOINTS["daily_bar"]
+        module.TUSHARE_ENDPOINTS["daily_bar"] = replace(original, max_rows=2)
+        try:
+            result = module.TushareProvider(client=FakePaginatedTushare()).fetch(
+                "daily_bar",
+                {"paginate": True, "page_size": 2, "require_complete": True},
+            )
+            self.assertEqual(len(result.records), 3)
+            self.assertTrue(result.metadata["pagination_complete"])
+            self.assertEqual(result.metadata["request_segment_row_counts"], [2, 1])
+        finally:
+            module.TUSHARE_ENDPOINTS["daily_bar"] = original
+
+    def test_index_weight_has_historical_pit_contract(self):
+        result = module.TushareProvider(client=FakeTushare()).fetch(
+            "index_weight",
+            {"index_code": "000300.SH", "trade_date": "20250102"},
+            as_of="20250102T16:00:00+08:00",
+            require_pit=True,
+        )
+        self.assertEqual(result.records[0]["con_code"], "600000.SH")
+        self.assertEqual(result.metadata["units"]["weight"], "percent")
+
+    def test_cutoff_safe_adjustment_ignores_future_factor(self):
+        daily = [
+            {"ts_code": "600000.SH", "trade_date": "20250101", "close": 10.0},
+            {"ts_code": "600000.SH", "trade_date": "20250102", "close": 11.0},
+        ]
+        factors = [
+            {"ts_code": "600000.SH", "trade_date": "20250101", "adj_factor": 1.0},
+            {"ts_code": "600000.SH", "trade_date": "20250102", "adj_factor": 1.1},
+            {"ts_code": "600000.SH", "trade_date": "20250103", "adj_factor": 99.0},
+        ]
+        result = module.adjust_price_records(daily, factors, mode="qfq", as_of="20250102")
+        self.assertAlmostEqual(result.records[0]["close"], 10.0 / 1.1)
+        self.assertAlmostEqual(result.records[1]["close"], 11.0)
+        self.assertEqual(result.metadata["future_factor_rows_dropped"], 1)
 
     def test_aliases_are_supported(self):
         result = module.TushareProvider(client=FakeTushare()).fetch("daily", {"ts_code": "600000.SH"}, as_of="20250102", require_pit=True)

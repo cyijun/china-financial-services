@@ -1,6 +1,6 @@
 {
   "name": "china-research-methodology",
-  "version": "1.0.0",
+  "version": "2.2.0",
   "description": "Evidence-first A-share research methodology with auditable Tushare and AKShare data controls.",
   "author": {
     "name": "cyijun",
