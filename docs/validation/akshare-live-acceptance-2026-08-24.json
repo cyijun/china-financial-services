@@ -1,0 +1,175 @@
+{
+  "generated_at": "2026-08-24T14:01:06.470711+00:00",
+  "repository_git_sha": "a0f63f5b44c57046c7f53d768e2b24bd8a723604",
+  "sdk": {
+    "python": "3.11.15",
+    "akshare": "1.18.94"
+  },
+  "security": {
+    "credentials_required": false,
+    "returned_records_in_report": false
+  },
+  "scope": {
+    "raw_daily_ts_code": "600519.SH",
+    "history_start": "20250801",
+    "history_end": "20250815"
+  },
+  "overall": "needs_revision",
+  "required_failures": [
+    "raw_daily_bar_pit",
+    "spot_snapshot",
+    "industry_list",
+    "industry_membership"
+  ],
+  "acceptance_claim": "all declared AKShare router interfaces attempted live",
+  "declared_dataset_coverage": [
+    {
+      "dataset": "daily_bar",
+      "interface": "stock_zh_a_hist",
+      "attempted_live": true,
+      "check_statuses": [
+        "api_error"
+      ]
+    },
+    {
+      "dataset": "industry_list",
+      "interface": "stock_board_industry_name_em",
+      "attempted_live": true,
+      "check_statuses": [
+        "api_error"
+      ]
+    },
+    {
+      "dataset": "industry_membership",
+      "interface": "stock_board_industry_cons_em",
+      "attempted_live": true,
+      "check_statuses": [
+        "blocked_by_dependency"
+      ]
+    },
+    {
+      "dataset": "security_master",
+      "interface": "stock_info_a_code_name",
+      "attempted_live": true,
+      "check_statuses": [
+        "pass"
+      ]
+    },
+    {
+      "dataset": "spot_snapshot",
+      "interface": "stock_zh_a_spot_em",
+      "attempted_live": true,
+      "check_statuses": [
+        "api_error"
+      ]
+    }
+  ],
+  "checks": [
+    {
+      "check_id": "security_master",
+      "dataset": "security_master",
+      "required": true,
+      "params": {},
+      "status": "pass",
+      "issues": [],
+      "row_count": 5549,
+      "columns": [
+        "name",
+        "symbol",
+        "ts_code"
+      ],
+      "response_sha256": "1744912b7fc6522f6ed3113d3dcc2e4f2b5d8ff1ba3082c88c1b044dbcb1d9ef",
+      "metadata": {
+        "interface": "stock_info_a_code_name",
+        "permission_verified_live": true,
+        "pit_grade": "current_snapshot",
+        "contract_status": "full",
+        "units": {},
+        "duplicate_key_rows": 0,
+        "truncation_suspected": false,
+        "documentation_limit_drift": false
+      },
+      "started_at": "2026-08-24T14:00:50.016713+00:00",
+      "finished_at": "2026-08-24T14:00:56.090264+00:00"
+    },
+    {
+      "check_id": "raw_daily_bar_pit",
+      "dataset": "daily_bar",
+      "required": true,
+      "params": {
+        "ts_code": "600519.SH",
+        "start_date": "20250801",
+        "end_date": "20250815",
+        "adjust": "",
+        "require_quality": true
+      },
+      "status": "api_error",
+      "issues": [
+        "HTTPSConnectionPool(host='push2his.eastmoney.com', port=443): Max retries exceeded with url: /api/qt/stock/kline/get?fields1=f1%2Cf2%2Cf3%2Cf4%2Cf5%2Cf6&fields2=f51%2Cf52%2Cf53%2Cf54%2Cf55%2Cf56%2Cf57%2Cf58%2Cf59%2Cf60%2Cf61%2Cf116&ut=7eea3edcaed734bea9cbfc24409ed989&klt=101&fqt=0&secid=1.600519&beg=20250801&end=20250815 (Caused by ProxyError('Unable to connect to proxy', RemoteDisconnected('Remote end closed connection without response')))"
+      ],
+      "row_count": 0,
+      "columns": [],
+      "started_at": "2026-08-24T14:00:56.090276+00:00",
+      "finished_at": "2026-08-24T14:00:56.211684+00:00"
+    },
+    {
+      "check_id": "spot_snapshot",
+      "dataset": "spot_snapshot",
+      "required": true,
+      "params": {},
+      "status": "api_error",
+      "issues": [
+        "HTTPSConnectionPool(host='82.push2.eastmoney.com', port=443): Max retries exceeded with url: /api/qt/clist/get?pn=1&pz=100&po=1&np=1&ut=bd1d9ddb04089700cf9c27f6f7426281&fltt=2&invt=2&fid=f12&fs=m%3A0+t%3A6%2Cm%3A0+t%3A80%2Cm%3A1+t%3A2%2Cm%3A1+t%3A23%2Cm%3A0+t%3A81+s%3A2048&fields=f1%2Cf2%2Cf3%2Cf4%2Cf5%2Cf6%2Cf7%2Cf8%2Cf9%2Cf10%2Cf12%2Cf13%2Cf14%2Cf15%2Cf16%2Cf17%2Cf18%2Cf20%2Cf21%2Cf23%2Cf24%2Cf25%2Cf22%2Cf11%2Cf62%2Cf128%2Cf136%2Cf115%2Cf152 (Caused by ProxyError('Unable to connect to proxy', RemoteDisconnected('Remote end closed connection without response')))"
+      ],
+      "row_count": 0,
+      "columns": [],
+      "started_at": "2026-08-24T14:00:56.211695+00:00",
+      "finished_at": "2026-08-24T14:01:01.342336+00:00"
+    },
+    {
+      "check_id": "industry_list",
+      "dataset": "industry_list",
+      "required": true,
+      "params": {},
+      "status": "api_error",
+      "issues": [
+        "HTTPSConnectionPool(host='17.push2.eastmoney.com', port=443): Max retries exceeded with url: /api/qt/clist/get?pn=1&pz=100&po=1&np=1&ut=bd1d9ddb04089700cf9c27f6f7426281&fltt=2&invt=2&fid=f3&fs=m%3A90+t%3A2+f%3A%2150&fields=f1%2Cf2%2Cf3%2Cf4%2Cf5%2Cf6%2Cf7%2Cf8%2Cf9%2Cf10%2Cf12%2Cf13%2Cf14%2Cf15%2Cf16%2Cf17%2Cf18%2Cf20%2Cf21%2Cf23%2Cf24%2Cf25%2Cf26%2Cf22%2Cf33%2Cf11%2Cf62%2Cf128%2Cf136%2Cf115%2Cf152%2Cf124%2Cf107%2Cf104%2Cf105%2Cf140%2Cf141%2Cf207%2Cf208%2Cf209%2Cf222 (Caused by ProxyError('Unable to connect to proxy', RemoteDisconnected('Remote end closed connection without response')))"
+      ],
+      "row_count": 0,
+      "columns": [],
+      "started_at": "2026-08-24T14:01:01.342350+00:00",
+      "finished_at": "2026-08-24T14:01:06.470594+00:00"
+    },
+    {
+      "check_id": "industry_membership",
+      "dataset": "industry_membership",
+      "required": true,
+      "params": {},
+      "status": "blocked_by_dependency",
+      "issues": [
+        "industry_list returned no usable industry name"
+      ],
+      "row_count": 0,
+      "columns": [],
+      "started_at": "2026-08-24T14:01:06.470612+00:00",
+      "finished_at": "2026-08-24T14:01:06.470616+00:00"
+    },
+    {
+      "check_id": "strict_pit_rejects_dynamic_adjustment",
+      "dataset": "daily_bar",
+      "required": true,
+      "params": {
+        "ts_code": "600519.SH",
+        "adjust": "qfq",
+        "require_pit": true
+      },
+      "row_count": 0,
+      "columns": [],
+      "started_at": "2026-08-24T14:01:06.470619+00:00",
+      "finished_at": "2026-08-24T14:01:06.470679+00:00",
+      "status": "pass",
+      "issues": []
+    }
+  ],
+  "evidence_sha256": "35bfcd81558848ca8701d3e44fcc13bf3d32f9bde11b38251a5512b067559ce5"
+}
