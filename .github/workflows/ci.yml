@@ -59,7 +59,7 @@ jobs:
       - name: Claude local marketplace installation smoke
         run: |
           expected=(china-research-methodology financial-analysis equity-research china-market-researcher china-model-builder)
-          claude plugin marketplace add . --scope local
+          claude plugin marketplace add ./ --scope local
           for plugin in "${expected[@]}"; do
             claude plugin install "$plugin@china-financial-services" --scope local
           done
